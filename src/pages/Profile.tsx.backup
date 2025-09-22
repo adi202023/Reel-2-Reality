@@ -1,0 +1,520 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  User, 
+  Trophy, 
+  Star, 
+  
+  Play, 
+  Camera,
+  Mail,
+  LogOut,
+  ArrowLeft
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { userAPI, User as UserType } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
+
+interface UserStats {
+  totalChallenges?: number;
+  completedChallenges?: number;
+  points?: number;
+  rank?: number;
+  level?: number;
+  achievements?: string[];
+}
+
+const Profile: React.FC = () => {
+  const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const [user, setUser] = useState<UserType | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    bio: ''
+  });
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      console.log('🔍 Profile: Starting to load user profile...');
+
+      const userData = localStorage.getItem('user');
+      const authToken = localStorage.getItem('authToken');
+
+      console.log('🔍 Profile: userData exists:', !!userData);
+      console.log('🔍 Profile: authToken exists:', !!authToken);
+
+      if (!userData || !authToken) {
+        console.log('🔍 Profile: No user data or auth token found, redirecting to dashboard');
+        navigate('/dashboard');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      console.log('🔍 Profile: Parsed user data:', user);
+      setUser(user);
+
+      // Set edit form with user data
+      setEditForm({
+        name: user.name || '',
+        email: user.email || '',
+        bio: user.bio || ''
+      });
+
+      console.log('🔍 Profile: Set user state, now loading stats...');
+
+      // Load user stats - handle API errors gracefully
+      try {
+        console.log('🔍 Profile: Calling userAPI.getUserStats for user ID:', user.id);
+        const statsResponse = await userAPI.getUserStats(user.id);
+        console.log('🔍 Profile: API response:', statsResponse);
+
+        if (statsResponse.success && statsResponse.data) {
+          setStats(statsResponse.data);
+          console.log('🔍 Profile: Set stats from API:', statsResponse.data);
+        } else {
+          console.log('🔍 Profile: API failed, using fallback stats');
+          // Set default stats if API fails
+          setStats({
+            totalChallenges: 12,
+            completedChallenges: user.completedChallenges || 8,
+            points: user.points || 2450,
+            rank: user.rank || 15,
+            level: user.level || 5,
+            achievements: user.achievements || []
+          });
+        }
+      } catch (apiError) {
+        console.error('🔍 Profile: API error:', apiError);
+        // Set default stats if API fails
+        setStats({
+          totalChallenges: 12,
+          completedChallenges: user.completedChallenges || 8,
+          points: user.points || 2450,
+          rank: user.rank || 15,
+          level: user.level || 5,
+          achievements: user.achievements || []
+        });
+      }
+    } catch (error) {
+      console.error('🔍 Profile: Error loading profile:', error);
+      navigate('/dashboard');
+    } finally {
+      console.log('🔍 Profile: Finished loading, setting isLoading to false');
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const response = await userAPI.updateProfile(user.id, {
+        name: editForm.name,
+        email: editForm.email,
+        // bio: editForm.bio
+      });
+
+      if (response.success && response.data) {
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    navigate('/');
+  };
+
+  const achievementIcons: { [key: string]: any } = {
+    "First Challenge": Trophy,
+    "Speed Demon": Star,
+    "Team Player": User,
+    "Rising Star": Star,
+    "Master Creator": Trophy,
+    "Challenge Champion": Star,
+    "Creative Genius": Camera,
+    "Collaboration Expert": User
+  };
+
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+          : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
+      } flex items-center justify-center`}>
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className={`${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !stats) {
+    return (
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+          : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
+      } flex items-center justify-center`}>
+        <div className="text-center">
+          <p className={`${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>Profile not found</p>
+          <Button onClick={() => navigate('/dashboard')} className="mt-4">
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
+    }`}>
+      {/* Header */}
+      <header className={`backdrop-blur-sm border-b ${
+        isDark ? 'bg-white/5 border-white/10' : 'bg-white/70 border-gray-200/50 shadow-lg'
+      }`}>
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className={`${
+                isDark
+                  ? 'text-gray-400 hover:text-white hover:bg-white/10'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              ⬅️
+              Back to Dashboard
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsEditing(!isEditing)}
+              className={`${
+                isDark
+                  ? 'text-gray-300 hover:text-white hover:bg-white/10'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              {isEditing ? 'Cancel' : 'Edit Profile'}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className={`${
+                isDark
+                  ? 'text-gray-300 hover:text-white hover:bg-white/10'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className={`max-w-6xl mx-auto px-6 py-8 ${
+        isDark ? 'bg-white/5' : 'bg-white/70'
+      }`}>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Profile Card */}
+          <div className="lg:col-span-1">
+            <div className={`backdrop-blur-sm border rounded-2xl p-8 text-center ${
+              isDark 
+                ? 'bg-white/5 border-white/10' 
+                : 'bg-white/70 border-gray-200/50 shadow-lg'
+            }`}>
+              {/* Avatar */}
+              <div className="relative mb-6">
+                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <User className="w-16 h-16 text-white" />
+                  )}
+                </div>
+                <button className="absolute bottom-2 right-1/2 transform translate-x-1/2 translate-y-1/2 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center hover:bg-yellow-300 transition-colors">
+                  <Camera className="w-5 h-5 text-black" />
+                </button>
+              </div>
+
+              {/* User Info */}
+              {isEditing ? (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+                      isDark 
+                        ? 'bg-white/5 border-white/20 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    placeholder="Full Name"
+                  />
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+                      isDark 
+                        ? 'bg-white/5 border-white/20 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    placeholder="Email"
+                  />
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none ${
+                      isDark 
+                        ? 'bg-white/5 border-white/20 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    rows={3}
+                    placeholder="Tell us about yourself..."
+                  />
+                  <Button
+                    onClick={handleSaveProfile}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-300 hover:to-orange-400"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h1 className={`text-2xl font-bold mb-2 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>{user?.name || 'User'}</h1>
+                  <p className={`mb-4 ${
+                    isDark ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{user?.email || 'No email'}</p>
+                  
+                  {/* Level & Rank */}
+                  <div className="flex justify-center space-x-6 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-400">Level {stats?.level || 1}</div>
+                      <div className="text-sm text-gray-400">Current Level</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">#{stats?.rank || 1}</div>
+                      <div className="text-sm text-gray-400">Global Rank</div>
+                    </div>
+                  </div>
+
+                  {/* Join Date */}
+                  <div className="flex items-center justify-center text-gray-400 text-sm mb-6">
+                    <Play className="w-4 h-4 mr-2" />
+                    Joined {user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      year: 'numeric' 
+                    }) : 'Recently'}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Stats & Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className={`backdrop-blur-sm border rounded-2xl p-6 text-center ${
+                isDark 
+                  ? 'bg-white/5 border-white/10' 
+                  : 'bg-white/70 border-gray-200/50 shadow-lg'
+              }`}>
+                <div className={`text-3xl font-bold mb-2 ${
+                  isDark ? 'text-yellow-400' : 'text-blue-600'
+                }`}>{stats?.points?.toLocaleString() || '0'}</div>
+                <div className={`font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>Total Points</div>
+              </div>
+
+              <div className={`backdrop-blur-sm border rounded-2xl p-6 text-center ${
+                isDark
+                  ? 'bg-white/5 border-white/10'
+                  : 'bg-white/70 border-gray-200/50 shadow-lg'
+              }`}>
+                <div className={`text-3xl font-bold mb-2 ${
+                  isDark ? 'text-purple-400' : 'text-green-600'
+                }`}>{stats?.completedChallenges || 0}</div>
+                <div className={`font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>Completed</div>
+              </div>
+
+              <div className={`backdrop-blur-sm border rounded-2xl p-6 text-center ${
+                isDark
+                  ? 'bg-white/5 border-white/10'
+                  : 'bg-white/70 border-gray-200/50 shadow-lg'
+              }`}>
+                <div className={`text-3xl font-bold mb-2 ${
+                  isDark ? 'text-pink-400' : 'text-orange-600'
+                }`}>{stats?.totalChallenges || 0}</div>
+                <div className={`font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>Available</div>
+              </div>
+
+              <div className={`backdrop-blur-sm border rounded-2xl p-6 text-center ${
+                isDark
+                  ? 'bg-white/5 border-white/10'
+                  : 'bg-white/70 border-gray-200/50 shadow-lg'
+              }`}>
+                <div className={`text-3xl font-bold mb-2 ${
+                  isDark ? 'text-cyan-400' : 'text-purple-600'
+                }`}>{stats?.achievements?.length || 0}</div>
+                <div className={`font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>Achievements</div>
+              </div>
+            </div>
+
+            {/* Achievements */}
+            <div className={`backdrop-blur-sm border rounded-2xl p-8 ${
+              isDark 
+                ? 'bg-white/5 border-white/10' 
+                : 'bg-white/70 border-gray-200/50 shadow-lg'
+            }`}>
+              <h2 className={`text-2xl font-bold mb-6 flex items-center ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                <Trophy className="w-6 h-6 mr-3 text-yellow-400" />
+                Achievements
+              </h2>
+              
+              {stats.achievements?.length > 0 ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {stats.achievements?.map((achievement, index) => {
+                    const IconComponent = achievementIcons[achievement as keyof typeof achievementIcons] || Trophy;
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center space-x-4 p-4 rounded-xl hover:bg-white/10 transition-colors ${
+                          isDark ? 'bg-white/5' : 'bg-white/70'
+                        }`}
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                          {React.createElement(IconComponent, { className: "w-6 h-6 text-black" })}
+                        </div>
+                        <div>
+                          <h3 className={`font-semibold ${
+                            isDark ? 'text-white' : 'text-gray-900'
+                          }`}>{achievement}</h3>
+                          <p className={`text-sm ${
+                            isDark ? 'text-gray-400' : 'text-gray-600'
+                          }`}>Achievement unlocked</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className={`w-16 h-16 mx-auto mb-4 ${
+                    isDark ? 'text-gray-600' : 'text-gray-400'
+                  }`} />
+                  <p className={`${
+                    isDark ? 'text-gray-400' : 'text-gray-600'
+                  }`}>No achievements yet. Complete challenges to earn your first badge!</p>
+                </div>
+              )}
+            </div>
+
+            {/* Progress Overview */}
+            <div className={`backdrop-blur-sm border rounded-2xl p-8 ${
+              isDark 
+                ? 'bg-white/5 border-white/10' 
+                : 'bg-white/70 border-gray-200/50 shadow-lg'
+            }`}>
+              <h2 className={`text-2xl font-bold mb-6 flex items-center ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                🎯
+                Progress Overview
+              </h2>
+              
+              <div className="space-y-6">
+                {/* Completion Rate */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`font-medium ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>Challenge Completion Rate</span>
+                    <span className={`${
+                      isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {stats.totalChallenges && stats.totalChallenges > 0 ? Math.round((stats.completedChallenges / stats.totalChallenges) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${stats.totalChallenges && stats.totalChallenges > 0 ? (stats.completedChallenges / stats.totalChallenges) * 100 : 0}%` 
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Level Progress */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`font-medium ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>Level {stats.level} Progress</span>
+                    <span className={`${
+                      isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {stats.points ? (stats.points % 500) : 0} / 500 XP
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-400 to-pink-500 h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${stats.points ? (stats.points % 500) / 500 * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Profile;

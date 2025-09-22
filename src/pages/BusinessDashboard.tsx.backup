@@ -1,0 +1,559 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Building, Plus, BarChart, Users, Trophy, Settings, LogOut, 
+  Eye, Edit, Trash, Calendar, MapPin, Star, TrendingUp, 
+  DollarSign, Coffee, Clock, CheckCircle, XCircle,
+  Filter, Search, Download, Bell, Menu, X
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+
+interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  status: 'active' | 'draft' | 'completed';
+  participants: number;
+  completions: number;
+  startDate: string;
+  endDate: string;
+  rewards: string[];
+}
+
+interface BusinessStats {
+  totalChallenges: number;
+  activeChallenges: number;
+  totalParticipants: number;
+  totalCompletions: number;
+  revenue: number;
+  engagement: number;
+}
+
+const BusinessDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [businessUser, setBusinessUser] = useState<any>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [stats, setStats] = useState<BusinessStats>({
+    totalChallenges: 12,
+    activeChallenges: 8,
+    totalParticipants: 245,
+    totalCompletions: 189,
+    revenue: 15420,
+    engagement: 78
+  });
+
+  useEffect(() => {
+    // Check authentication
+    const user = localStorage.getItem('businessUser');
+    const token = localStorage.getItem('businessAuthToken');
+    
+    if (!user || !token) {
+      navigate('/business-auth');
+      return;
+    }
+    
+    setBusinessUser(JSON.parse(user));
+    loadChallenges();
+  }, [navigate]);
+
+  const loadChallenges = () => {
+    // Mock data - replace with API call
+    const mockChallenges: Challenge[] = [
+      {
+        id: '1',
+        title: 'Coffee Art Challenge',
+        description: 'Create the most creative latte art and share it on social media',
+        points: 100,
+        difficulty: 'medium',
+        category: 'Social Media',
+        status: 'active',
+        participants: 45,
+        completions: 32,
+        startDate: '2024-01-15',
+        endDate: '2024-02-15',
+        rewards: ['Free Coffee', '10% Discount']
+      },
+      {
+        id: '2',
+        title: 'Breakfast Photo Contest',
+        description: 'Share your best breakfast photo with our hashtag',
+        points: 75,
+        difficulty: 'easy',
+        category: 'Photography',
+        status: 'active',
+        participants: 67,
+        completions: 54,
+        startDate: '2024-01-10',
+        endDate: '2024-01-31',
+        rewards: ['Free Breakfast', 'Gift Card']
+      },
+      {
+        id: '3',
+        title: 'Review & Rate Challenge',
+        description: 'Leave a detailed review on Google and social media',
+        points: 50,
+        difficulty: 'easy',
+        category: 'Reviews',
+        status: 'active',
+        participants: 89,
+        completions: 76,
+        startDate: '2024-01-01',
+        endDate: '2024-03-01',
+        rewards: ['5% Discount', 'Loyalty Points']
+      }
+    ];
+    setChallenges(mockChallenges);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('businessUser');
+    localStorage.removeItem('businessAuthToken');
+    navigate('/business-auth');
+  };
+
+  const StatCard = ({ icon: Icon, title, value, change, color }: any) => (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          {change && (
+            <p className={`text-sm mt-1 flex items-center ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <TrendingUp className="w-4 h-4 mr-1" />
+              {change > 0 ? '+' : ''}{change}%
+            </p>
+          )}
+        </div>
+        <div className={`p-3 rounded-lg ${color}`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const ChallengeCard = ({ challenge }: { challenge: Challenge }) => (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">{challenge.title}</h3>
+          <p className="text-gray-600 mt-1">{challenge.description}</p>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="ghost" size="sm">
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="sm">
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="sm">
+            <Trash className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div>
+          <p className="text-sm text-gray-600">Points</p>
+          <p className="font-semibold text-emerald-600">{challenge.points}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Participants</p>
+          <p className="font-semibold">{challenge.participants}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Completions</p>
+          <p className="font-semibold">{challenge.completions}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Success Rate</p>
+          <p className="font-semibold">{Math.round((challenge.completions / challenge.participants) * 100)}%</p>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            challenge.status === 'active' ? 'bg-green-100 text-green-800' :
+            challenge.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {challenge.status}
+          </span>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            challenge.difficulty === 'easy' ? 'bg-blue-100 text-blue-800' :
+            challenge.difficulty === 'medium' ? 'bg-orange-100 text-orange-800' :
+            'bg-red-100 text-red-800'
+          }`}>
+            {challenge.difficulty}
+          </span>
+        </div>
+        <div className="text-sm text-gray-600">
+          <Calendar className="w-4 h-4 inline mr-1" />
+          {new Date(challenge.endDate).toLocaleDateString()}
+        </div>
+      </div>
+    </div>
+  );
+
+  const CreateChallengeModal = () => {
+    const [formData, setFormData] = useState({
+      title: '',
+      description: '',
+      points: 100,
+      difficulty: 'medium',
+      category: 'Social Media',
+      startDate: '',
+      endDate: '',
+      rewards: ['']
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      // Add challenge logic here
+      setShowCreateModal(false);
+    };
+
+    if (!showCreateModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Create New Challenge</h2>
+              <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Challenge Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Enter challenge title"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                rows={3}
+                placeholder="Describe the challenge"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Points Reward</label>
+                <input
+                  type="number"
+                  value={formData.points}
+                  onChange={(e) => setFormData({...formData, points: parseInt(e.target.value)})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  min="1"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+                <select
+                  value={formData.difficulty}
+                  onChange={(e) => setFormData({...formData, difficulty: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="Social Media">Social Media</option>
+                  <option value="Photography">Photography</option>
+                  <option value="Reviews">Reviews</option>
+                  <option value="Visit">Visit Challenge</option>
+                  <option value="Purchase">Purchase Challenge</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                Create Challenge
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <StatCard
+                icon={Trophy}
+                title="Total Challenges"
+                value={stats.totalChallenges}
+                change={12}
+                color="bg-emerald-500"
+              />
+              <StatCard
+                icon={Users}
+                title="Total Participants"
+                value={stats.totalParticipants}
+                change={8}
+                color="bg-blue-500"
+              />
+              <StatCard
+                icon={CheckCircle}
+                title="Completions"
+                value={stats.totalCompletions}
+                change={15}
+                color="bg-green-500"
+              />
+              <StatCard
+                icon={DollarSign}
+                title="Revenue Impact"
+                value={`$${stats.revenue.toLocaleString()}`}
+                change={22}
+                color="bg-purple-500"
+              />
+              <StatCard
+                icon={TrendingUp}
+                title="Engagement Rate"
+                value={`${stats.engagement}%`}
+                change={5}
+                color="bg-orange-500"
+              />
+              <StatCard
+                icon={Target}
+                title="Active Challenges"
+                value={stats.activeChallenges}
+                change={-2}
+                color="bg-red-500"
+              />
+            </div>
+
+            {/* Recent Challenges */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Challenges</h2>
+                <Button onClick={() => setShowCreateModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Challenge
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {challenges.slice(0, 4).map((challenge) => (
+                  <ChallengeCard key={challenge.id} challenge={challenge} />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'challenges':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">All Challenges</h2>
+              <div className="flex space-x-3">
+                <Button variant="ghost">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                </Button>
+                <Button onClick={() => setShowCreateModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Challenge
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {challenges.map((challenge) => (
+                <ChallengeCard key={challenge.id} challenge={challenge} />
+              ))}
+            </div>
+          </div>
+        );
+        
+      case 'analytics':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900">Analytics & Reports</h2>
+            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center">
+              <BarChart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Advanced Analytics Coming Soon</h3>
+              <p className="text-gray-600">Detailed insights and reporting features are being developed.</p>
+            </div>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
+  if (!businessUser) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out`}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <Building className="w-8 h-8 text-emerald-600" />
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Business Hub</h1>
+              <p className="text-sm text-gray-600">{businessUser.businessName}</p>
+            </div>
+          </div>
+          <Button variant="ghost" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        <nav className="p-4 space-y-2">
+          {[
+            { id: 'overview', label: 'Overview', icon: BarChart },
+            { id: 'challenges', label: 'Challenges', icon: Trophy },
+            { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+            { id: 'settings', label: 'Settings', icon: Settings },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                activeTab === item.id
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="absolute bottom-4 left-4 right-4">
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            Logout
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:ml-64">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+                <Menu className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 capitalize">{activeTab}</h1>
+                <p className="text-sm text-gray-600">Manage your business challenges and engagement</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost">
+                <Bell className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {businessUser.businessName?.charAt(0) || 'B'}
+                  </span>
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-gray-900">{businessUser.businessName}</p>
+                  <p className="text-xs text-gray-600">{businessUser.businessType}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-6">
+          {renderContent()}
+        </main>
+      </div>
+
+      {/* Create Challenge Modal */}
+      <CreateChallengeModal />
+    </div>
+  );
+};
+
+export default BusinessDashboard;

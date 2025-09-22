@@ -1,0 +1,29 @@
+Starting project at /Users/adityasheregar/Desktop/Reel-To-Reality(final)/Reel-To-Reality1
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+The following packages should be updated for best compatibility with the installed expo version:
+  @types/react@18.2.79 - expected version: ~19.1.10
+  @types/react-dom@18.3.7 - expected version: ~19.1.7
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo/AppEntry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo/AppEntry.js ▓▓▓░░░░░░░░░░░░░ 20.7% ( 5/11)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.2% (21/28)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% ( 58/147)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (135/263)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (213/387)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (302/504)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (357/520)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (423/564)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 68.7% (477/578)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.3% (554/662)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 81.8% (662/732)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.4% (683/778)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.4% (764/858)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 88.4% (864/919)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (965/985)
+Web Bundled 55554ms node_modules/expo/AppEntry.js (1063 modules)
+ LOG  [web] Logs will appear in the browser console
+› Detected a change in metro.config.js. Restart the server to see the new results.
+› Detected a change in babel.config.js. Restart the server to see the new results. You may need to clear the bundler cache with the --clear flag for your changes to take effect.

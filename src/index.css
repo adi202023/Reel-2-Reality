@@ -1,0 +1,374 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 84% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 84% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 84% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 84% 4%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 32% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 224 71% 4%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  /* Force dark theme from the start */
+  html, body, #root {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+    color: #f1f5f9 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Ensure no white backgrounds */
+  body, html, #root, div, main, section, article, aside {
+    background: transparent !important;
+  }
+
+  /* Force dark theme for all elements */
+  * {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  /* Custom gradient backgrounds */
+  .bg-gradient-reel {
+    background: linear-gradient(135deg, hsl(45, 100%, 70%) 0%, hsl(35, 100%, 60%) 100%);
+  }
+  
+  .bg-gradient-challenge {
+    background: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(330, 81%, 60%) 100%);
+  }
+  
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 58%) 100%);
+  }
+
+  /* Glass morphism effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Custom button variants */
+  .btn-hero {
+    background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-reel {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: black;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-challenge {
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.6s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Text effects */
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Card effects */
+  .card-hover {
+    transition: all 0.3s ease;
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  
+  .card-glass {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+  }
+
+  /* Shadow effects for buttons */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+
+  .shadow-reel-glow {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+  }
+
+  .shadow-challenge-glow {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+
+  /* Enhanced hover effects */
+  .hover-lift {
+    transition: all 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Notification styles */
+  .notification-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    animation: slideInRight 0.5s ease-out forwards;
+  }
+
+  .notification-error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    animation: slideInRight 0.5s ease-out forwards;
+  }
+
+  .notification-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    animation: slideInRight 0.5s ease-out forwards;
+  }
+}
+
+@layer utilities {
+  /* Custom animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes loading {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px currentColor;
+    }
+    50% {
+      box-shadow: 0 0 20px currentColor;
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* Responsive text utilities */
+  .text-responsive-xs {
+    font-size: 0.875rem;
+  }
+  
+  .text-responsive-sm {
+    font-size: 1rem;
+  }
+  
+  .text-responsive-base {
+    font-size: 1.125rem;
+  }
+  
+  .text-responsive-lg {
+    font-size: 1.25rem;
+  }
+  
+  .text-responsive-xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-responsive-2xl {
+    font-size: 1.875rem;
+  }
+
+  /* Spacing utilities */
+  .space-y-responsive {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .px-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .py-responsive {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  /* Interactive states */
+  .interactive {
+    transition: all 0.2s ease;
+    transform: scale(1.05);
+  }
+  
+  .interactive-glow {
+    transition: all 0.3s ease;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  /* Animation delay utilities */
+  .delay-500 {
+    animation-delay: 0.5s;
+  }
+  
+  .delay-1000 {
+    animation-delay: 1s;
+  }
+  
+  .delay-1500 {
+    animation-delay: 1.5s;
+  }
+  
+  .delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .delay-3000 {
+    animation-delay: 3s;
+  }
+  
+  .reverse-animation {
+    animation-direction: reverse;
+  }
+
+  /* Pulse animation */
+  .animate-pulse {
+    animation: pulse 1s infinite ease-in-out;
+  }
+
+  /* Loading animation */
+  .animate-loading {
+    animation: loading 1s infinite linear;
+  }
+}
