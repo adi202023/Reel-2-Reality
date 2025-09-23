@@ -20,8 +20,8 @@
       "Share on Instagram",
       "Use hashtag #CoffeeArt"
     ],
-    "createdAt": "2025-09-23T06:09:25.553Z",
-    "updatedAt": "2025-09-23T06:09:25.556Z"
+    "createdAt": "2025-09-23T06:11:19.359Z",
+    "updatedAt": "2025-09-23T06:11:19.360Z"
   },
   "challenge-2": {
     "id": "challenge-2",
@@ -44,8 +44,8 @@
       "Upload photo",
       "Use hashtag #BreakfastGoals"
     ],
-    "createdAt": "2025-09-23T06:09:25.556Z",
-    "updatedAt": "2025-09-23T06:09:25.556Z"
+    "createdAt": "2025-09-23T06:11:19.360Z",
+    "updatedAt": "2025-09-23T06:11:19.360Z"
   },
   "challenge-3": {
     "id": "challenge-3",
@@ -68,8 +68,8 @@
       "Google Review",
       "Social Media Post"
     ],
-    "createdAt": "2025-09-23T06:09:25.556Z",
-    "updatedAt": "2025-09-23T06:09:25.556Z"
+    "createdAt": "2025-09-23T06:11:19.360Z",
+    "updatedAt": "2025-09-23T06:11:19.360Z"
   },
   "challenge-4": {
     "id": "challenge-4",
@@ -92,8 +92,8 @@
       "30-second video",
       "Creative content"
     ],
-    "createdAt": "2025-09-23T06:09:25.556Z",
-    "updatedAt": "2025-09-23T06:09:25.556Z"
+    "createdAt": "2025-09-23T06:11:19.360Z",
+    "updatedAt": "2025-09-23T06:11:19.360Z"
   },
   "challenge-5": {
     "id": "challenge-5",
@@ -116,7 +116,7 @@
       "Team of 4",
       "Collaborative project"
     ],
-    "createdAt": "2025-09-23T06:09:25.556Z",
-    "updatedAt": "2025-09-23T06:09:25.556Z"
+    "createdAt": "2025-09-23T06:11:19.360Z",
+    "updatedAt": "2025-09-23T06:11:19.360Z"
   }
 }
