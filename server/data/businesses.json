@@ -2,12 +2,12 @@
   "demo-business-1": {
     "id": "demo-business-1",
     "email": "demo@business.com",
-    "password": "$2a$10$P8TF9S0BdZIcCQvmCuFnMejIREaxsCJj3WBIxZjf39VE9K8o6riqG",
+    "password": "$2a$10$HS9g7A.3N7ZqNXsHnm50pOoF2jcBENqOx2x5IGWgVsNvK.71m2K7C",
     "businessName": "Demo Cafe",
     "businessType": "cafe",
     "address": "123 Main St, Demo City",
     "phone": "+1234567890",
-    "createdAt": "2025-09-23T06:07:52.214Z",
+    "createdAt": "2025-09-23T06:09:26.921Z",
     "isVerified": true
   }
 }
