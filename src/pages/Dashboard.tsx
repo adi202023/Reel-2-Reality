@@ -345,11 +345,11 @@ const Dashboard: React.FC = () => {
         id: 'business-1',
         title: 'Coffee Art Challenge',
         description: 'Create beautiful latte art and share your masterpiece.',
-        points: 180,
+        points: 150,
         difficulty: 'easy',
         category: 'Social Media',
         participants: 890,
-        userStatus: 'available',
+        userStatus: 'available', // User hasn't joined yet
         status: 'active',
         businessId: 'demo-business',
         rewards: ['Free Coffee', '20% Discount'],
@@ -359,11 +359,11 @@ const Dashboard: React.FC = () => {
         id: 'business-2',
         title: 'Breakfast Photo Contest',
         description: 'Share your best breakfast photo with our hashtag.',
-        points: 120,
+        points: 100,
         difficulty: 'easy',
         category: 'Photography',
         participants: 567,
-        userStatus: 'available',
+        userStatus: 'available', // User hasn't joined yet
         status: 'active',
         businessId: 'demo-business',
         rewards: ['Free Breakfast', 'Gift Card'],
@@ -371,13 +371,13 @@ const Dashboard: React.FC = () => {
       },
       {
         id: 'business-3',
-        title: 'Customer Review Challenge',
-        description: 'Write a detailed review of your experience.',
-        points: 80,
+        title: 'Review Challenge',
+        description: 'Leave a detailed review and social media post.',
+        points: 200,
         difficulty: 'easy',
         category: 'Reviews',
         participants: 234,
-        userStatus: 'available',
+        userStatus: 'available', // User hasn't joined yet
         status: 'active',
         businessId: 'demo-business',
         rewards: ['10% Discount', 'Loyalty Points'],
@@ -394,17 +394,37 @@ const Dashboard: React.FC = () => {
         difficulty: 'medium',
         category: 'creativity',
         participants: 1200,
-        userStatus: 'available'
+        userStatus: 'available' // User hasn't joined yet
       },
       {
         id: 'mock-2',
+        title: 'Team Collaboration',
+        description: 'Work with 3 other creators on a group project.',
+        points: 500,
+        difficulty: 'hard',
+        category: 'Teamwork',
+        participants: 654,
+        userStatus: 'available' // User hasn't joined yet
+      },
+      {
+        id: 'mock-3',
+        title: 'Creative Video Challenge',
+        description: 'Create a 30-second creative video showcasing your talent.',
+        points: 250,
+        difficulty: 'medium',
+        category: 'creativity',
+        participants: 1200,
+        userStatus: 'available' // User hasn't joined yet
+      },
+      {
+        id: 'mock-4',
         title: 'Fitness Transformation',
         description: 'Document your 30-day fitness journey.',
         points: 500,
         difficulty: 'hard',
         category: 'Fitness',
         participants: 654,
-        userStatus: 'completed',
+        userStatus: 'completed', // This one is actually completed
         userPointsEarned: 500
       }
     ];
@@ -1712,7 +1732,9 @@ const Dashboard: React.FC = () => {
                           <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-1">
                             {entry.points.toLocaleString()}
                           </div>
-                          <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>points</div>
+                          <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                            points
+                          </div>
                           <div className="text-xs text-emerald-500 font-medium">
                             +{entry.weeklyPoints} this week
                           </div>
@@ -1778,25 +1800,33 @@ const Dashboard: React.FC = () => {
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
                   <div className="text-2xl mb-2">🏆</div>
                   <div className="text-2xl font-bold text-yellow-500">{leaderboard[0]?.points.toLocaleString() || '0'}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Highest Score</div>
+                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    Highest Score
+                  </div>
                 </div>
                 
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
                   <div className="text-2xl mb-2">📈</div>
                   <div className="text-2xl font-bold text-emerald-500">{Math.round(leaderboard.reduce((acc, entry) => acc + (entry.level * 0.8), 0) / leaderboard.length) || 0}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Avg. Completed</div>
+                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    Avg. Completed
+                  </div>
                 </div>
                 
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
                   <div className="text-2xl mb-2">⚡</div>
-                  <div className="text-2xl font-bold text-purple-500">{Math.round(leaderboard.reduce((acc, entry) => acc + entry.level, 0) / leaderboard.length) || 0}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Avg. Level</div>
+                  <div className="text-2xl font-bold text-purple-600">{Math.round(leaderboard.reduce((acc, entry) => acc + entry.level, 0) / leaderboard.length) || 0}</div>
+                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    Avg. Level
+                  </div>
                 </div>
 
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
                   <div className="text-2xl mb-2">👥</div>
-                  <div className="text-2xl font-bold text-orange-500">{leaderboard.length}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Active Players</div>
+                  <div className="text-2xl font-bold text-orange-600">{leaderboard.length}</div>
+                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    Active Players
+                  </div>
                 </div>
               </div>
             </div>

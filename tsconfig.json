@@ -5,10 +5,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
     "lib": [
-      "dom",
-      "dom.iterable",
       "esnext"
     ],
     "moduleResolution": "bundler",
@@ -34,11 +31,6 @@
         "./src/lib/*"
       ]
     },
-    "types": [
-      "react",
-      "react-dom",
-      "node"
-    ],
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": false,

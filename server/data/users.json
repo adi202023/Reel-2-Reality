@@ -1,1 +1,40 @@
-{}
+{
+  "user-1": {
+    "id": "user-1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "$2a$10$GadPgK0rq5jvurSaH9ieGOH/nggDyTC9jDldnyMY6.YUNps1q1DCC",
+    "username": "johndoe",
+    "avatar": "👨‍💻",
+    "points": 2450,
+    "level": 15,
+    "completedChallenges": 8,
+    "joinDate": "2025-09-23T06:06:35.452Z",
+    "achievements": [
+      "Early Adopter",
+      "Video Creator",
+      "Community Helper"
+    ],
+    "rank": 15,
+    "isActive": true
+  },
+  "user-2": {
+    "id": "user-2",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "password": "$2a$10$7FkAP8pLtEcoXsSKpbktk.kI.S0az34VCBHsDoK/ZXG1yTsSEwCoW",
+    "username": "janesmith",
+    "avatar": "👩‍🎨",
+    "points": 3200,
+    "level": 22,
+    "completedChallenges": 12,
+    "joinDate": "2025-09-23T06:06:35.566Z",
+    "achievements": [
+      "Top Performer",
+      "Creative Genius",
+      "Social Star"
+    ],
+    "rank": 8,
+    "isActive": true
+  }
+}

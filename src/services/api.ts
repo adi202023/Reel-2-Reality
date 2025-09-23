@@ -124,10 +124,66 @@ export class APIService {
       return response;
     } catch (error) {
       console.error('User login error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unable to connect to server. Please ensure the backend is running on port 3001.'
-      };
+      
+      // Fallback to localStorage-based authentication when server is unavailable
+      console.log('Server unavailable, using fallback authentication...');
+      
+      // Check if user exists in localStorage (from previous registration)
+      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const user = existingUsers.find((u: any) => u.email === email && u.password === password);
+      
+      if (user) {
+        // Successful login with stored credentials
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('authToken', `fallback-token-${user.id}`);
+        
+        return {
+          success: true,
+          data: {
+            user: user,
+            token: `fallback-token-${user.id}`
+          },
+          message: 'Login successful (offline mode)'
+        };
+      } else {
+        // Check for demo accounts
+        const demoUsers = [
+          {
+            id: 'demo-user-1',
+            name: 'Demo User',
+            email: 'demo@user.com',
+            password: 'password123',
+            username: 'demouser',
+            avatar: '👤',
+            points: 1250,
+            level: 12,
+            completedChallenges: 5,
+            joinDate: new Date().toISOString(),
+            achievements: ['Demo User', 'Quick Starter'],
+            rank: 25
+          }
+        ];
+        
+        const demoUser = demoUsers.find(u => u.email === email && u.password === password);
+        if (demoUser) {
+          localStorage.setItem('user', JSON.stringify(demoUser));
+          localStorage.setItem('authToken', `fallback-token-${demoUser.id}`);
+          
+          return {
+            success: true,
+            data: {
+              user: demoUser,
+              token: `fallback-token-${demoUser.id}`
+            },
+            message: 'Demo login successful (offline mode)'
+          };
+        }
+        
+        return {
+          success: false,
+          message: 'Invalid credentials. Server is offline - try demo@user.com / password123 or create a new account.'
+        };
+      }
     }
   }
 
@@ -146,9 +202,50 @@ export class APIService {
       return response;
     } catch (error) {
       console.error('User registration error:', error);
+      
+      // Fallback to localStorage-based registration when server is unavailable
+      console.log('Server unavailable, using fallback registration...');
+      
+      // Check if user already exists
+      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const userExists = existingUsers.find((u: any) => u.email === email);
+      
+      if (userExists) {
+        return {
+          success: false,
+          message: 'An account with this email already exists. Please try logging in.'
+        };
+      }
+      
+      // Create new user
+      const newUser = {
+        id: `user-${Date.now()}`,
+        name: name,
+        email: email,
+        password: password, // In production, this should be hashed
+        username: name.toLowerCase().replace(/\s+/g, ''),
+        avatar: '👤',
+        points: 0,
+        level: 1,
+        completedChallenges: 0,
+        joinDate: new Date().toISOString(),
+        achievements: ['New Member'],
+        rank: 999
+      };
+      
+      // Save to localStorage
+      existingUsers.push(newUser);
+      localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem('authToken', `fallback-token-${newUser.id}`);
+      
       return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unable to connect to server. Please ensure the backend is running on port 3001.'
+        success: true,
+        data: {
+          user: newUser,
+          token: `fallback-token-${newUser.id}`
+        },
+        message: 'Account created successfully (offline mode)'
       };
     }
   }
@@ -169,10 +266,74 @@ export class APIService {
       return response;
     } catch (error) {
       console.error('Business login error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unable to connect to server. Please ensure the backend is running on port 3001.'
-      };
+      
+      // Fallback to localStorage-based authentication when server is unavailable
+      console.log('Server unavailable, using fallback business authentication...');
+      
+      // Check if business exists in localStorage (from previous registration)
+      const existingBusinesses = JSON.parse(localStorage.getItem('registeredBusinesses') || '[]');
+      const business = existingBusinesses.find((b: any) => b.email === email && b.password === password);
+      
+      if (business) {
+        // Successful login with stored credentials
+        localStorage.setItem('businessUser', JSON.stringify(business));
+        localStorage.setItem('businessAuthToken', `fallback-business-token-${business.id}`);
+        
+        return {
+          success: true,
+          data: {
+            user: business,
+            token: `fallback-business-token-${business.id}`
+          },
+          message: 'Business login successful (offline mode)'
+        };
+      } else {
+        // Check for demo business accounts
+        const demoBusinesses = [
+          {
+            id: 'demo-business-1',
+            email: 'demo@business.com',
+            password: 'password123',
+            businessName: 'Demo Cafe',
+            businessType: 'cafe',
+            address: '123 Main St, Demo City',
+            phone: '+1234567890',
+            createdAt: new Date().toISOString(),
+            isVerified: true
+          },
+          {
+            id: 'demo-business-2',
+            email: 'cafe@demo.com',
+            password: 'password123',
+            businessName: 'Coffee Central',
+            businessType: 'cafe',
+            address: '456 Business Ave, Demo City',
+            phone: '+1234567891',
+            createdAt: new Date().toISOString(),
+            isVerified: true
+          }
+        ];
+        
+        const demoBusiness = demoBusinesses.find(b => b.email === email && b.password === password);
+        if (demoBusiness) {
+          localStorage.setItem('businessUser', JSON.stringify(demoBusiness));
+          localStorage.setItem('businessAuthToken', `fallback-business-token-${demoBusiness.id}`);
+          
+          return {
+            success: true,
+            data: {
+              user: demoBusiness,
+              token: `fallback-business-token-${demoBusiness.id}`
+            },
+            message: 'Demo business login successful (offline mode)'
+          };
+        }
+        
+        return {
+          success: false,
+          message: 'Invalid credentials. Server is offline - try demo@business.com / password123 or create a new business account.'
+        };
+      }
     }
   }
 
@@ -191,9 +352,47 @@ export class APIService {
       return response;
     } catch (error) {
       console.error('Business registration error:', error);
+      
+      // Fallback to localStorage-based registration when server is unavailable
+      console.log('Server unavailable, using fallback business registration...');
+      
+      // Check if business already exists
+      const existingBusinesses = JSON.parse(localStorage.getItem('registeredBusinesses') || '[]');
+      const businessExists = existingBusinesses.find((b: any) => b.email === businessData.email);
+      
+      if (businessExists) {
+        return {
+          success: false,
+          message: 'A business with this email already exists. Please try logging in.'
+        };
+      }
+      
+      // Create new business
+      const newBusiness = {
+        id: `business-${Date.now()}`,
+        email: businessData.email,
+        password: businessData.password, // In production, this should be hashed
+        businessName: businessData.businessName,
+        businessType: businessData.businessType,
+        address: businessData.address,
+        phone: businessData.phone,
+        createdAt: new Date().toISOString(),
+        isVerified: true
+      };
+      
+      // Save to localStorage
+      existingBusinesses.push(newBusiness);
+      localStorage.setItem('registeredBusinesses', JSON.stringify(existingBusinesses));
+      localStorage.setItem('businessUser', JSON.stringify(newBusiness));
+      localStorage.setItem('businessAuthToken', `fallback-business-token-${newBusiness.id}`);
+      
       return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unable to connect to server. Please ensure the backend is running on port 3001.'
+        success: true,
+        data: {
+          user: newBusiness,
+          token: `fallback-business-token-${newBusiness.id}`
+        },
+        message: 'Business account created successfully (offline mode)'
       };
     }
   }
@@ -279,7 +478,7 @@ export class APIService {
       return response;
     } catch (error) {
       console.error('Get user challenges error:', error);
-      // Return mock data as fallback
+      // Return comprehensive mock data as fallback
       return {
         success: true,
         data: {
@@ -293,7 +492,8 @@ export class APIService {
               category: 'creativity',
               participants: 1250,
               completionRate: 68,
-              userStatus: 'not_joined'
+              featured: true,
+              timeLimit: 1800 // 30 minutes
             },
             {
               id: '2',
@@ -304,7 +504,56 @@ export class APIService {
               category: 'teamwork',
               participants: 890,
               completionRate: 45,
-              userStatus: 'not_joined'
+              featured: false,
+              timeLimit: 7200 // 2 hours
+            },
+            {
+              id: '3',
+              title: 'Speed Challenge',
+              description: 'Complete this challenge in under 10 minutes.',
+              points: 150,
+              difficulty: 'easy',
+              category: 'speed',
+              participants: 2100,
+              completionRate: 82,
+              featured: true,
+              timeLimit: 600 // 10 minutes
+            },
+            {
+              id: '4',
+              title: 'Photography Master',
+              description: 'Capture the perfect shot with creative composition.',
+              points: 200,
+              difficulty: 'medium',
+              category: 'photography',
+              participants: 1650,
+              completionRate: 73,
+              featured: false,
+              timeLimit: 3600 // 1 hour
+            },
+            {
+              id: '5',
+              title: 'Innovation Challenge',
+              description: 'Come up with a unique solution to a common problem.',
+              points: 400,
+              difficulty: 'hard',
+              category: 'innovation',
+              participants: 567,
+              completionRate: 38,
+              featured: true,
+              timeLimit: 10800 // 3 hours
+            },
+            {
+              id: '6',
+              title: 'Storytelling Quest',
+              description: 'Tell a compelling story in 60 seconds or less.',
+              points: 180,
+              difficulty: 'easy',
+              category: 'storytelling',
+              participants: 1890,
+              completionRate: 76,
+              featured: false,
+              timeLimit: 1200 // 20 minutes
             }
           ]
         }

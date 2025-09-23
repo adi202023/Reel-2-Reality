@@ -95,12 +95,12 @@ const persistData = () => {
 
 // Mock data initialization
 const initializeMockData = () => {
-  // Only initialize if no data exists (first run)
-  if (businesses.size === 0) {
-    console.log('Initializing mock data for first run...');
-    
-    // Create demo business
-    const demoBusinessId = 'demo-business-1';
+  console.log('Checking and initializing mock data...');
+  
+  // Create demo business if it doesn't exist
+  const demoBusinessId = 'demo-business-1';
+  if (!businesses.has(demoBusinessId)) {
+    console.log('Creating demo business...');
     const hashedPassword = bcrypt.hashSync('password123', 10);
     
     businesses.set(demoBusinessId, {
@@ -114,119 +114,180 @@ const initializeMockData = () => {
       createdAt: new Date().toISOString(),
       isVerified: true,
     });
-
-    // Create demo challenges only if none exist
-    if (challenges.size === 0) {
-      const challenge1 = {
-        id: 'challenge-1',
-        businessId: demoBusinessId,
-        title: 'Coffee Art Challenge',
-        description: 'Create the most creative latte art and share it on social media',
-        points: 100,
-        difficulty: 'medium',
-        category: 'Social Media',
-        status: 'active',
-        participants: 45,
-        completions: 32,
-        startDate: '2024-01-15',
-        endDate: '2024-02-15',
-        rewards: ['Free Coffee', '10% Discount'],
-        requirements: ['Share on Instagram', 'Use hashtag #CoffeeArt'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const challenge2 = {
-        id: 'challenge-2',
-        businessId: demoBusinessId,
-        title: 'Breakfast Photo Contest',
-        description: 'Share your best breakfast photo with our hashtag',
-        points: 75,
-        difficulty: 'easy',
-        category: 'Photography',
-        status: 'active',
-        participants: 67,
-        completions: 54,
-        startDate: '2024-01-10',
-        endDate: '2024-01-31',
-        rewards: ['Free Breakfast', 'Gift Card'],
-        requirements: ['Upload photo', 'Use hashtag #BreakfastGoals'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      challenges.set(challenge1.id, challenge1);
-      challenges.set(challenge2.id, challenge2);
-    }
-
-    // Create demo users only if none exist
-    if (users.size === 0) {
-      const demoUser1 = {
-        id: 'user-1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: bcrypt.hashSync('password123', 10),
-        username: 'johndoe',
-        avatar: '👨‍💻',
-        points: 2450,
-        level: 15,
-        completedChallenges: 8,
-        joinDate: new Date().toISOString(),
-        achievements: ['Early Adopter', 'Video Creator', 'Community Helper'],
-        rank: 15,
-        isActive: true,
-      };
-
-      const demoUser2 = {
-        id: 'user-2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: bcrypt.hashSync('password123', 10),
-        username: 'janesmith',
-        avatar: '👩‍🎨',
-        points: 3200,
-        level: 22,
-        completedChallenges: 12,
-        joinDate: new Date().toISOString(),
-        achievements: ['Top Performer', 'Creative Genius', 'Social Star'],
-        rank: 8,
-        isActive: true,
-      };
-
-      users.set(demoUser1.id, demoUser1);
-      users.set(demoUser2.id, demoUser2);
-    }
-
-    // Create user challenge participations only if none exist
-    if (userChallenges.size === 0) {
-      userChallenges.set('user-1-challenge-1', {
-        id: 'user-1-challenge-1',
-        userId: 'user-1',
-        challengeId: 'challenge-1',
-        status: 'completed',
-        submissionDate: new Date().toISOString(),
-        pointsEarned: 100,
-        rating: 4.5,
-      });
-
-      userChallenges.set('user-2-challenge-2', {
-        id: 'user-2-challenge-2',
-        userId: 'user-2',
-        challengeId: 'challenge-2',
-        status: 'in_progress',
-        submissionDate: null,
-        pointsEarned: 0,
-        rating: null,
-      });
-    }
-
-    // Save initial data
-    persistData();
-    console.log('Mock data initialized and persisted.');
-  } else {
-    console.log('Existing data found. Skipping mock data initialization.');
-    console.log(`Loaded: ${businesses.size} businesses, ${challenges.size} challenges, ${users.size} users`);
   }
+
+  // Create demo challenges if they don't exist (independent of business check)
+  if (challenges.size === 0) {
+    console.log('Creating demo challenges...');
+    const challenge1 = {
+      id: 'challenge-1',
+      businessId: demoBusinessId,
+      title: 'Coffee Art Challenge',
+      description: 'Create the most creative latte art and share it on social media',
+      points: 150,
+      difficulty: 'medium',
+      category: 'Social Media',
+      status: 'active',
+      participants: 45,
+      completions: 32,
+      startDate: '2024-01-15',
+      endDate: '2024-02-15',
+      rewards: ['Free Coffee', '20% Discount'],
+      requirements: ['Share on Instagram', 'Use hashtag #CoffeeArt'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const challenge2 = {
+      id: 'challenge-2',
+      businessId: demoBusinessId,
+      title: 'Breakfast Photo Contest',
+      description: 'Share your best breakfast photo with our hashtag',
+      points: 100,
+      difficulty: 'easy',
+      category: 'Photography',
+      status: 'active',
+      participants: 67,
+      completions: 54,
+      startDate: '2024-01-10',
+      endDate: '2024-02-28',
+      rewards: ['Free Pastry', 'Instagram Feature'],
+      requirements: ['Upload photo', 'Use hashtag #BreakfastGoals'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const challenge3 = {
+      id: 'challenge-3',
+      businessId: demoBusinessId,
+      title: 'Review Challenge',
+      description: 'Leave a detailed review on Google and social media',
+      points: 200,
+      difficulty: 'easy',
+      category: 'Reviews',
+      status: 'active',
+      participants: 89,
+      completions: 76,
+      startDate: '2024-01-01',
+      endDate: '2024-03-31',
+      rewards: ['Free Meal', 'VIP Status'],
+      requirements: ['Google Review', 'Social Media Post'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const challenge4 = {
+      id: 'challenge-4',
+      businessId: demoBusinessId,
+      title: 'Creative Video Challenge',
+      description: 'Create a 30-second creative video showcasing your talent',
+      points: 250,
+      difficulty: 'medium',
+      category: 'creativity',
+      status: 'active',
+      participants: 125,
+      completions: 68,
+      startDate: '2024-01-20',
+      endDate: '2024-02-20',
+      rewards: ['Free Coffee for a Week', 'Featured Video'],
+      requirements: ['30-second video', 'Creative content'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const challenge5 = {
+      id: 'challenge-5',
+      businessId: demoBusinessId,
+      title: 'Team Collaboration',
+      description: 'Work with 3 other creators on a group project',
+      points: 500,
+      difficulty: 'hard',
+      category: 'teamwork',
+      status: 'active',
+      participants: 89,
+      completions: 45,
+      startDate: '2024-01-15',
+      endDate: '2024-03-15',
+      rewards: ['Group Reward', 'Team Recognition'],
+      requirements: ['Team of 4', 'Collaborative project'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    challenges.set(challenge1.id, challenge1);
+    challenges.set(challenge2.id, challenge2);
+    challenges.set(challenge3.id, challenge3);
+    challenges.set(challenge4.id, challenge4);
+    challenges.set(challenge5.id, challenge5);
+  }
+
+  // Create demo users if they don't exist
+  if (users.size === 0) {
+    console.log('Creating demo users...');
+    const demoUser1 = {
+      id: 'user-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: bcrypt.hashSync('password123', 10),
+      username: 'johndoe',
+      avatar: '👨‍💻',
+      points: 2450,
+      level: 15,
+      completedChallenges: 8,
+      joinDate: new Date().toISOString(),
+      achievements: ['Early Adopter', 'Video Creator', 'Community Helper'],
+      rank: 15,
+      isActive: true,
+    };
+
+    const demoUser2 = {
+      id: 'user-2',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      password: bcrypt.hashSync('password123', 10),
+      username: 'janesmith',
+      avatar: '👩‍🎨',
+      points: 3200,
+      level: 22,
+      completedChallenges: 12,
+      joinDate: new Date().toISOString(),
+      achievements: ['Top Performer', 'Creative Genius', 'Social Star'],
+      rank: 8,
+      isActive: true,
+    };
+
+    users.set(demoUser1.id, demoUser1);
+    users.set(demoUser2.id, demoUser2);
+  }
+
+  // Create user challenge participations if they don't exist
+  if (userChallenges.size === 0) {
+    console.log('Creating demo user challenges...');
+    userChallenges.set('user-1-challenge-1', {
+      id: 'user-1-challenge-1',
+      userId: 'user-1',
+      challengeId: 'challenge-1',
+      status: 'completed',
+      submissionDate: new Date().toISOString(),
+      pointsEarned: 150,
+      rating: 4.5,
+    });
+
+    userChallenges.set('user-2-challenge-2', {
+      id: 'user-2-challenge-2',
+      userId: 'user-2',
+      challengeId: 'challenge-2',
+      status: 'in_progress',
+      submissionDate: null,
+      pointsEarned: 0,
+      rating: null,
+    });
+  }
+
+  // Always save data after initialization
+  persistData();
+  console.log('Mock data initialization completed.');
+  console.log(`Current data: ${businesses.size} businesses, ${challenges.size} challenges, ${users.size} users`);
 };
 
 // Initialize mock data

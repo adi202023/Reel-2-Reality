@@ -1,1 +1,122 @@
-{}
+{
+  "challenge-1": {
+    "id": "challenge-1",
+    "businessId": "demo-business-1",
+    "title": "Coffee Art Challenge",
+    "description": "Create the most creative latte art and share it on social media",
+    "points": 150,
+    "difficulty": "medium",
+    "category": "Social Media",
+    "status": "active",
+    "participants": 45,
+    "completions": 32,
+    "startDate": "2024-01-15",
+    "endDate": "2024-02-15",
+    "rewards": [
+      "Free Coffee",
+      "20% Discount"
+    ],
+    "requirements": [
+      "Share on Instagram",
+      "Use hashtag #CoffeeArt"
+    ],
+    "createdAt": "2025-09-23T06:05:43.472Z",
+    "updatedAt": "2025-09-23T06:05:43.473Z"
+  },
+  "challenge-2": {
+    "id": "challenge-2",
+    "businessId": "demo-business-1",
+    "title": "Breakfast Photo Contest",
+    "description": "Share your best breakfast photo with our hashtag",
+    "points": 100,
+    "difficulty": "easy",
+    "category": "Photography",
+    "status": "active",
+    "participants": 67,
+    "completions": 54,
+    "startDate": "2024-01-10",
+    "endDate": "2024-02-28",
+    "rewards": [
+      "Free Pastry",
+      "Instagram Feature"
+    ],
+    "requirements": [
+      "Upload photo",
+      "Use hashtag #BreakfastGoals"
+    ],
+    "createdAt": "2025-09-23T06:05:43.473Z",
+    "updatedAt": "2025-09-23T06:05:43.473Z"
+  },
+  "challenge-3": {
+    "id": "challenge-3",
+    "businessId": "demo-business-1",
+    "title": "Review Challenge",
+    "description": "Leave a detailed review on Google and social media",
+    "points": 200,
+    "difficulty": "easy",
+    "category": "Reviews",
+    "status": "active",
+    "participants": 89,
+    "completions": 76,
+    "startDate": "2024-01-01",
+    "endDate": "2024-03-31",
+    "rewards": [
+      "Free Meal",
+      "VIP Status"
+    ],
+    "requirements": [
+      "Google Review",
+      "Social Media Post"
+    ],
+    "createdAt": "2025-09-23T06:05:43.473Z",
+    "updatedAt": "2025-09-23T06:05:43.473Z"
+  },
+  "challenge-4": {
+    "id": "challenge-4",
+    "businessId": "demo-business-1",
+    "title": "Creative Video Challenge",
+    "description": "Create a 30-second creative video showcasing your talent",
+    "points": 250,
+    "difficulty": "medium",
+    "category": "creativity",
+    "status": "active",
+    "participants": 125,
+    "completions": 68,
+    "startDate": "2024-01-20",
+    "endDate": "2024-02-20",
+    "rewards": [
+      "Free Coffee for a Week",
+      "Featured Video"
+    ],
+    "requirements": [
+      "30-second video",
+      "Creative content"
+    ],
+    "createdAt": "2025-09-23T06:05:43.473Z",
+    "updatedAt": "2025-09-23T06:05:43.473Z"
+  },
+  "challenge-5": {
+    "id": "challenge-5",
+    "businessId": "demo-business-1",
+    "title": "Team Collaboration",
+    "description": "Work with 3 other creators on a group project",
+    "points": 500,
+    "difficulty": "hard",
+    "category": "teamwork",
+    "status": "active",
+    "participants": 89,
+    "completions": 45,
+    "startDate": "2024-01-15",
+    "endDate": "2024-03-15",
+    "rewards": [
+      "Group Reward",
+      "Team Recognition"
+    ],
+    "requirements": [
+      "Team of 4",
+      "Collaborative project"
+    ],
+    "createdAt": "2025-09-23T06:05:43.473Z",
+    "updatedAt": "2025-09-23T06:05:43.473Z"
+  }
+}

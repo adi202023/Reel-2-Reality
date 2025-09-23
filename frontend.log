@@ -1,29 +1,33 @@
-Starting project at /Users/adityasheregar/Desktop/Reel-To-Reality(final)/Reel-To-Reality1
+Starting project at /Users/adityasheregar/Desktop/Reel-To-Reality(final)
 Starting Metro Bundler
 warning: Bundler cache is empty, rebuilding (this may take a minute)
 The following packages should be updated for best compatibility with the installed expo version:
-  @types/react@18.2.79 - expected version: ~19.1.10
-  @types/react-dom@18.3.7 - expected version: ~19.1.7
+  @react-native-async-storage/async-storage@1.23.1 - expected version: 2.2.0
+  expo@54.0.9 - expected version: ~54.0.10
 Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8081
 Logs for your project will appear below.
-Web node_modules/expo/AppEntry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Web node_modules/expo/AppEntry.js ▓▓▓░░░░░░░░░░░░░ 20.7% ( 5/11)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.2% (21/28)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% ( 58/147)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (135/263)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (213/387)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (302/504)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (357/520)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.0% (423/564)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 68.7% (477/578)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.3% (554/662)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 81.8% (662/732)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.4% (683/778)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.4% (764/858)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 88.4% (864/919)
-Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (965/985)
-Web Bundled 55554ms node_modules/expo/AppEntry.js (1063 modules)
+Web node_modules/expo/AppEntry.js ▓▓▓▓░░░░░░░░░░░░ 25.0% (16/34)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.0% (147/295)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.0% (356/548)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 76.4% (572/681)
+Web node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.9% (792/864)
+Web Bundled 18893ms node_modules/expo/AppEntry.js (1063 modules)
  LOG  [web] Logs will appear in the browser console
-› Detected a change in metro.config.js. Restart the server to see the new results.
-› Detected a change in babel.config.js. Restart the server to see the new results. You may need to clear the bundler cache with the --clear flag for your changes to take effect.
+Web src/pages/BusinessAuth.tsx ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.2% (13/14)
+Web Bundled 78ms node_modules/expo/AppEntry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web src/pages/BusinessAuth.tsx ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% ( 378/1231)
+Web src/pages/BusinessAuth.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web src/pages/BusinessAuth.tsx ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% ( 722/1231)
+Web src/pages/BusinessAuth.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web src/pages/BusinessAuth.tsx ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% ( 963/1231)
+Web src/pages/BusinessAuth.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 17642ms src/pages/BusinessAuth.tsx (1232 modules)
+Web src/pages/BusinessAuth.tsx ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (1232/1232)
+Web src/pages/BusinessAuth.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 12088ms src/pages/BusinessAuth.tsx (1 module)
+Web src/pages/Login.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 974ms src/pages/Login.tsx (1233 modules)
+Web src/pages/Dashboard.tsx ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2298ms src/pages/Dashboard.tsx (1 module)
