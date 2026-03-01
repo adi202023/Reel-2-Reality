@@ -36,5 +36,22 @@
     ],
     "rank": 8,
     "isActive": true
+  },
+  "d2bb6ba2-ab1e-4882-a226-cee18e799bea": {
+    "id": "d2bb6ba2-ab1e-4882-a226-cee18e799bea",
+    "name": "adi",
+    "email": "adi@gmail.com",
+    "password": "$2a$10$SkuDO9HpIyg33KNxRZcoQeIBDFwfz/vqRfLPKOMHSmZWHPyjSHYwm",
+    "username": "adi",
+    "avatar": "👤",
+    "points": 0,
+    "level": 1,
+    "completedChallenges": 0,
+    "joinDate": "2026-03-01T08:44:44.020Z",
+    "achievements": [
+      "New Member"
+    ],
+    "rank": 999,
+    "isActive": true
   }
 }

@@ -222,8 +222,8 @@ const Dashboard: React.FC = () => {
       
       // Try multiple endpoints to get challenges
       const endpoints = [
-        'http://localhost:3001/api/challenges/public', // New public endpoint
-        'http://localhost:3001/api/business/challenges' // Original endpoint with auth
+        (window.location.port === '8081' ? 'http://localhost:3001' : '') + '/api/challenges/public',
+        (window.location.port === '8081' ? 'http://localhost:3001' : '') + '/api/business/challenges'
       ];
 
       let response = null;
@@ -1197,7 +1197,7 @@ const Dashboard: React.FC = () => {
                         ) : challenge.userStatus === 'in_progress' ? (
                           <Button 
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => navigate('/challenges')}
+                            onClick={() => navigate('/dashboard')}
                           >
                             ▶️
                             Continue Challenge
@@ -1306,7 +1306,7 @@ const Dashboard: React.FC = () => {
                         ) : challenge.userStatus === 'in_progress' ? (
                           <Button 
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => navigate('/challenges')}
+                            onClick={() => navigate('/dashboard')}
                           >
                             ▶️
                             Continue Challenge

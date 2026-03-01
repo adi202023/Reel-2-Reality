@@ -109,7 +109,9 @@ const BusinessAuth: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiUrl = 'http://localhost:3001';
+      const apiUrl = typeof window !== 'undefined'
+  ? (window.location.port === '8081' ? 'http://localhost:3001' : '')
+  : 'http://localhost:3001';
 
       if (isLogin) {
         // Login API call

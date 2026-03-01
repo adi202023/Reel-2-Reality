@@ -184,7 +184,8 @@ const Home: React.FC = () => {
     // Test backend connection and get system info
     const checkBackend = async () => {
       try {
-        const response = await fetch('http://localhost:3001');
+        const apiBase = window.location.port === '8081' ? 'http://localhost:3001' : '';
+        const response = await fetch(`${apiBase}/api/health`);
         if (response.ok) {
           const data = await response.json();
           setBackendStatus('✅ Connected');
@@ -193,7 +194,7 @@ const Home: React.FC = () => {
           
           // Get system stats
           try {
-            const statsResponse = await fetch('http://localhost:3001/api/business/analytics/stats');
+            const statsResponse = await fetch(`${apiBase}/api/business/analytics/stats`);
             if (statsResponse.ok) {
               const statsData = await statsResponse.json();
               setStats(prev => ({
@@ -773,13 +774,10 @@ const Home: React.FC = () => {
           opacity: 0
         }}>
           <p style={{ margin: '0.5rem 0', fontWeight: '500' }}>
-            <strong style={{ color: '#3b82f6' }}>Frontend:</strong> http://localhost:8081
+            <strong style={{ color: '#10b981' }}>App:</strong> {typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'}
           </p>
           <p style={{ margin: '0.5rem 0', fontWeight: '500' }}>
-            <strong style={{ color: '#10b981' }}>Backend:</strong> http://localhost:3001
-          </p>
-          <p style={{ margin: '0.5rem 0', fontWeight: '500' }}>
-            <strong style={{ color: '#a855f7' }}>Business Dashboard:</strong> http://localhost:8081/business-dashboard
+            <strong style={{ color: '#a855f7' }}>Business Dashboard:</strong> /business-dashboard
           </p>
         </div>
       </div>

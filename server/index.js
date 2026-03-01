@@ -9,13 +9,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const IS_VERCEL = process.env.VERCEL === '1';
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Data storage paths
-const DATA_DIR = path.join(__dirname, 'data');
+// Data storage: /tmp on Vercel (writable), server/data locally
+const DATA_DIR = IS_VERCEL ? path.join(require('os').tmpdir(), 'reel-data') : path.join(__dirname, 'data');
 const BUSINESSES_FILE = path.join(DATA_DIR, 'businesses.json');
 const CHALLENGES_FILE = path.join(DATA_DIR, 'challenges.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -331,30 +332,16 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Business API is running' });
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
+// API info (for programmatic discovery)
+app.get('/api', (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to the Reel-to-Reality Business API',
+    message: 'Reel-to-Reality API',
     endpoints: {
-      auth: {
-        register: 'POST /api/business/auth/register',
-        login: 'POST /api/business/auth/login',
-        logout: 'POST /api/business/auth/logout'
-      },
-      challenges: {
-        list: 'GET /api/business/challenges',
-        get: 'GET /api/business/challenges/:id',
-        create: 'POST /api/business/challenges',
-        update: 'PUT /api/business/challenges/:id',
-        delete: 'DELETE /api/business/challenges/:id'
-      },
-      analytics: {
-        stats: 'GET /api/business/analytics/stats'
-      },
-      profile: {
-        get: 'GET /api/business/profile'
-      }
+      auth: { register: 'POST /api/business/auth/register', login: 'POST /api/business/auth/login', logout: 'POST /api/business/auth/logout' },
+      challenges: { list: 'GET /api/business/challenges', get: 'GET /api/business/challenges/:id', create: 'POST /api/business/challenges', update: 'PUT /api/business/challenges/:id', delete: 'DELETE /api/business/challenges/:id' },
+      analytics: { stats: 'GET /api/business/analytics/stats' },
+      profile: { get: 'GET /api/business/profile' }
     }
   });
 });
@@ -1251,62 +1238,53 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: 'Route not found' 
-  });
-});
+// Serve static frontend only when NOT on Vercel (Vercel serves static from dist)
+if (!IS_VERCEL) {
+  const distPath = path.join(__dirname, '..', 'dist');
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  } else {
+    app.get('/', (req, res) => res.json({ success: true, message: 'API running. Run: npm run build && npm run serve' }));
+    app.use('*', (req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+  }
+} else {
+  app.use('*', (req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+}
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Business API server running on port ${PORT}`);
-  console.log(`📊 Data persistence enabled - challenges will be saved to disk`);
-  console.log(`🔗 API endpoints available at http://localhost:${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-});
+// Only start HTTP server when not on Vercel (serverless handles requests there)
+let server;
+if (!IS_VERCEL) {
+  const distPath = path.join(__dirname, '..', 'dist');
+  function startServer(port) {
+    server = app.listen(port, () => {
+      const hasFrontend = fs.existsSync(distPath);
+      console.log(`🚀 Reel-to-Reality server on http://localhost:${port}`);
+      if (hasFrontend) console.log(`🌐 Web app + API: http://localhost:${port}`);
+      else console.log(`📋 API only (run: npm run build && npm run serve)`);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Port ${port} is already in use.`);
+        console.error('   Free it with: lsof -ti:' + port + ' | xargs kill -9');
+        process.exit(1);
+      }
+      throw err;
+    });
+    return server;
+  }
+  startServer(PORT);
 
-// Graceful shutdown handler
-const gracefulShutdown = (signal) => {
-  console.log(`\n${signal} received. Saving data and shutting down gracefully...`);
-  
-  // Save all data before shutdown
-  persistData();
-  console.log('✅ Data saved successfully');
-  
-  server.close(() => {
-    console.log('🛑 Server closed');
-    process.exit(0);
-  });
-  
-  // Force close after 10 seconds
-  setTimeout(() => {
-    console.log('⚠️  Forcing shutdown');
-    process.exit(1);
-  }, 10000);
-};
-
-// Handle shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-// Auto-save data every 5 minutes
-setInterval(() => {
-  persistData();
-  console.log('📁 Auto-saved data to disk');
-}, 5 * 60 * 1000);
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  persistData();
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  persistData();
-});
+  const gracefulShutdown = (signal) => {
+    persistData();
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 10000);
+  };
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  setInterval(persistData, 5 * 60 * 1000);
+  process.on('uncaughtException', (error) => { console.error(error); persistData(); process.exit(1); });
+  process.on('unhandledRejection', (reason, promise) => { console.error(reason); persistData(); });
+}
 
 module.exports = app;

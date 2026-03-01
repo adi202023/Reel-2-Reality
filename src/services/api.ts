@@ -52,8 +52,10 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:3001';
+// API: relative when served from backend (port 3001), full URL in dev (port 8081)
+const API_BASE_URL = typeof window !== 'undefined'
+  ? (window.location.port === '8081' ? 'http://localhost:3001' : '')
+  : 'http://localhost:3001';
 
 // API Service for both User and Business authentication
 export class APIService {
