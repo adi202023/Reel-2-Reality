@@ -654,19 +654,30 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
+  // ── Toast notification system ────────────────────────────────────────────
+  const [toasts, setToasts] = React.useState<{id:string; msg:string; type:'success'|'info'|'error'}[]>([]);
+  const showToast = React.useCallback((msg: string, type: 'success'|'info'|'error' = 'success') => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  }, []);
+
+  // ── Chat modal state ──────────────────────────────────────────────────────
+  const [chatModal, setChatModal] = React.useState<{open:boolean; friendName:string; msg:string}>({open:false, friendName:'', msg:''});
+
   const handleJoinChallenge = async (challengeId: string) => {
     try {
-      alert('Successfully joined the challenge!');
-      setUserChallenges(prev => 
-        prev.map(challenge => 
-          challenge.id === parseInt(challengeId) 
+      setUserChallenges(prev =>
+        prev.map(challenge =>
+          challenge.id === parseInt(challengeId)
             ? { ...challenge, userStatus: 'in_progress' }
             : challenge
         )
       );
+      showToast('🚀 Successfully joined the challenge!', 'success');
     } catch (error) {
       console.error('Error joining challenge:', error);
-      alert('Failed to join challenge');
+      showToast('Failed to join challenge', 'error');
     }
   };
 
@@ -685,88 +696,71 @@ const Dashboard: React.FC = () => {
   const claimReward = (rewardId: string) => {
     const reward = rewards.find(r => r.id === rewardId);
     if (reward && stats.points >= reward.points) {
-      setRewards(prev => 
-        prev.map(r => 
-          r.id === rewardId ? { ...r, claimed: true } : r
-        )
-      );
+      setRewards(prev => prev.map(r => r.id === rewardId ? { ...r, claimed: true } : r));
       setStats(prev => ({ ...prev, points: prev.points - reward.points }));
-      alert(`Successfully claimed: ${reward.title}!`);
+      showToast(`🎁 Successfully claimed: ${reward.title}!`, 'success');
     } else {
-      alert('Not enough points to claim this reward!');
+      showToast('Not enough points to claim this reward!', 'error');
     }
   };
 
   const startChat = (friendName: string) => {
-    // Create a simple chat modal
-    const message = prompt(`Send a message to ${friendName}:`);
-    if (message) {
-      alert(`Message sent to ${friendName}: "${message}"`);
-      
-      // Add a notification for the chat
+    setChatModal({ open: true, friendName, msg: '' });
+  };
+
+  const sendChatMessage = () => {
+    if (chatModal.msg.trim()) {
       const newNotification: Notification = {
         id: Date.now().toString(),
         type: 'friend',
         title: 'Message Sent',
-        message: `Your message was sent to ${friendName}`,
+        message: `Your message was sent to ${chatModal.friendName}`,
         timestamp: 'Just now',
         read: false,
         icon: '💬'
       };
-      
       setNotifications(prev => [newNotification, ...prev]);
+      showToast(`💬 Message sent to ${chatModal.friendName}!`, 'success');
     }
+    setChatModal({ open: false, friendName: '', msg: '' });
   };
 
   const findFriends = () => {
-    // Simulate finding new friends
     const potentialFriends = [
       { name: 'John Smith', level: 12, points: 1850, mutualFriends: 3 },
       { name: 'Maria Garcia', level: 16, points: 2100, mutualFriends: 2 },
       { name: 'David Wilson', level: 14, points: 1950, mutualFriends: 5 },
       { name: 'Sophie Taylor', level: 18, points: 2300, mutualFriends: 1 }
     ];
-    
     const randomFriend = potentialFriends[Math.floor(Math.random() * potentialFriends.length)];
-    
-    const shouldAdd = confirm(`Found ${randomFriend.name} (Level ${randomFriend.level}, ${randomFriend.points} points, ${randomFriend.mutualFriends} mutual friends). Send friend request?`);
-    
-    if (shouldAdd) {
-      // Add to friends list
-      const newFriend: Friend = {
-        id: Date.now().toString(),
-        name: randomFriend.name,
-        avatar: '👤',
-        points: randomFriend.points,
-        level: randomFriend.level,
-        status: Math.random() > 0.5 ? 'online' : 'offline',
-        mutualFriends: randomFriend.mutualFriends
-      };
-      
-      setFriends(prev => [newFriend, ...prev]);
-      setStats(prev => ({ ...prev, friends: prev.friends + 1 }));
-      
-      // Add notification
-      const notification: Notification = {
-        id: Date.now().toString(),
-        type: 'friend',
-        title: 'Friend Request Sent',
-        message: `Friend request sent to ${randomFriend.name}`,
-        timestamp: 'Just now',
-        read: false,
-        icon: '👥'
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      alert(`Friend request sent to ${randomFriend.name}!`);
-    }
+    const newFriend: Friend = {
+      id: Date.now().toString(),
+      name: randomFriend.name,
+      avatar: '👤',
+      points: randomFriend.points,
+      level: randomFriend.level,
+      status: Math.random() > 0.5 ? 'online' : 'offline',
+      mutualFriends: randomFriend.mutualFriends
+    };
+    setFriends(prev => [newFriend, ...prev]);
+    setStats(prev => ({ ...prev, friends: prev.friends + 1 }));
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      type: 'friend',
+      title: 'Friend Request Sent',
+      message: `Friend request sent to ${randomFriend.name}`,
+      timestamp: 'Just now',
+      read: false,
+      icon: '👥'
+    }, ...prev]);
+    showToast(`👥 Friend request sent to ${randomFriend.name}!`, 'success');
   };
 
   const refreshChallenges = async () => {
     setLoading(true);
     await loadChallengesFromBusinessAPI();
     setLoading(false);
-    alert('Challenges refreshed! New challenges from businesses are now available.');
+    showToast('✅ Challenges refreshed!', 'success');
   };
 
   const activeChallenges = businessChallengesList?.filter(c => c.status === 'active') || [];
@@ -786,433 +780,247 @@ const Dashboard: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold mb-4">Loading Dashboard...</h2>
-          <p className="text-gray-400">Please wait while we load your data.</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0B0F14' }}>
+        <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          <div className="animate-orb-drift" style={{ position: 'absolute', top: '20%', left: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+          <div className="animate-orb-drift delay-700" style={{ position: 'absolute', top: '50%', right: '10%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        </div>
+        <div className="text-center" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="animate-glow-ring" style={{ width: 64, height: 64, borderRadius: '50%', border: '3px solid transparent', background: 'linear-gradient(#0B0F14, #0B0F14) padding-box, linear-gradient(135deg, #7C3AED, #06B6D4) border-box', margin: '0 auto 1.5rem', animation: 'spinRing 1s linear infinite' }} />
+          <h2 className="text-2xl font-bold mb-2 gradient-text">Loading Dashboard</h2>
+          <p style={{ color: '#64748B' }}>Preparing your experience...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: safeTheme.colors.background }}>
+    <div className="min-h-screen flex" style={{ background: '#0B0F14', fontFamily: "'Outfit', sans-serif", position: 'relative' }}>
+      {/* Gradient orb background */}
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div className="animate-orb-drift" style={{ position: 'absolute', top: '10%', left: '5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="animate-orb-drift delay-1000" style={{ position: 'absolute', top: '60%', right: '5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="animate-orb-drift delay-500" style={{ position: 'absolute', bottom: '10%', left: '40%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(250,204,21,0.06) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+      </div>
+      {/* XP progress bar */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 100, background: 'rgba(255,255,255,0.03)' }}>
+        <div className="xp-bar-fill" style={{ width: `${Math.min(100, ((stats.points % 1000) / 1000) * 100)}%` }} />
+      </div>
       {/* Sidebar */}
-      <div className="w-64 flex flex-col" style={{ backgroundColor: safeTheme.colors.surface, borderRight: `1px solid ${safeTheme.colors.border}` }}>
+      <div style={{ width: 240, minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(24px)', borderRight: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
         {/* User Profile Section */}
-        <div className="p-6 border-b" style={{ borderColor: safeTheme.colors.border }}>
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">
-                {user?.name?.charAt(0) || 'U'}
-              </span>
+        <div style={{ padding: '1.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <div className="animate-glow-ring" style={{ width: 46, height: 46, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #06B6D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(124,58,237,0.3), 0 0 20px rgba(124,58,237,0.25)', flexShrink: 0 }}>
+              <span style={{ color: 'white', fontWeight: 800, fontSize: '1.1rem' }}>{user?.name?.charAt(0) || 'U'}</span>
             </div>
-            <div>
-              <h3 className="font-semibold" style={{ color: safeTheme.colors.text }}>
-                {user?.name || 'User'}
-              </h3>
-              <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
-                Level {stats.level}
-              </p>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ color: '#F1F5F9', fontWeight: 700, fontSize: '0.95rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name?.split(' ')[0] || 'User'}</h3>
+              <p style={{ color: '#7C3AED', fontSize: '0.78rem', margin: 0, fontWeight: 600 }}>Level {stats.level} · {stats.points} XP</p>
             </div>
           </div>
         </div>
 
-        {/* Navigation - Scrollable Area */}
-        <div className="flex-1 overflow-y-auto">
-          <nav className="p-4 space-y-2">
+        {/* Navigation */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          {[
+            { id: 'dashboard', icon: '⬡', label: 'Dashboard' },
+            { id: 'challenges', icon: '⚡', label: 'Challenges' },
+            { id: 'notifications', icon: '🔔', label: 'Notifications', badge: stats.notifications },
+            { id: 'friends', icon: '👥', label: 'Friends', badge: stats.friends },
+            { id: 'leaderboard', icon: '🏆', label: 'Leaderboard' },
+            { id: 'rewards', icon: '🎁', label: 'Rewards', badge: stats.rewards },
+            { id: 'profile', icon: '👤', label: 'Profile' },
+          ].map(({ id, icon, label, badge }) => (
             <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'dashboard' 
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
-                  : 'hover:bg-blue-50 hover:text-blue-700'
-              }`}
-              style={{ color: activeTab === 'dashboard' ? 'white' : safeTheme.colors.text }}
+              key={id}
+              onClick={() => setActiveTab(id)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.65rem 0.875rem', borderRadius: '0.75rem', border: 'none',
+                cursor: 'pointer', fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: '0.9rem',
+                transition: 'all 0.2s ease',
+                background: activeTab === id
+                  ? 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.2))'
+                  : 'transparent',
+                color: activeTab === id ? '#F1F5F9' : '#64748B',
+                boxShadow: activeTab === id ? 'inset 0 0 0 1px rgba(124,58,237,0.4)' : 'none',
+              }}
             >
-              🏠
-              <span className="font-medium">Dashboard</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('challenges')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'challenges' 
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg' 
-                  : 'hover:bg-emerald-50 hover:text-emerald-700'
-              }`}
-              style={{ color: activeTab === 'challenges' ? 'white' : safeTheme.colors.text }}
-            >
-              🎯
-              <span className="font-medium">Challenges</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'notifications' 
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg' 
-                  : 'hover:bg-orange-50 hover:text-orange-700'
-              }`}
-              style={{ color: activeTab === 'notifications' ? 'white' : safeTheme.colors.text }}
-            >
-              🔔
-              <span className="font-medium">Notifications</span>
-              {stats.notifications > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                  {stats.notifications}
-                </span>
+              <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{icon}</span>
+              <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+              {badge > 0 && (
+                <span style={{ background: id === 'friends' ? 'rgba(100,116,139,0.4)' : 'linear-gradient(135deg,#7C3AED,#06B6D4)', color: 'white', borderRadius: '999px', padding: '1px 8px', fontSize: '0.7rem', fontWeight: 700 }}>{badge}</span>
               )}
             </button>
-
-            <button
-              onClick={() => setActiveTab('friends')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'friends' 
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg' 
-                  : 'hover:bg-purple-50 hover:text-purple-700'
-              }`}
-              style={{ color: activeTab === 'friends' ? 'white' : safeTheme.colors.text }}
-            >
-              👥
-              <span className="font-medium">Friends</span>
-              <span className="ml-auto bg-gray-500 text-white text-xs rounded-full px-2 py-1">
-                {stats.friends}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('leaderboard')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'leaderboard' 
-                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg' 
-                  : 'hover:bg-yellow-50 hover:text-yellow-700'
-              }`}
-              style={{ color: activeTab === 'leaderboard' ? 'white' : safeTheme.colors.text }}
-            >
-              🏆
-              <span className="font-medium">Leaderboard</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('rewards')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'rewards' 
-                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg' 
-                  : 'hover:bg-pink-50 hover:text-pink-700'
-              }`}
-              style={{ color: activeTab === 'rewards' ? 'white' : safeTheme.colors.text }}
-            >
-              🎁
-              <span className="font-medium">Rewards</span>
-              {stats.rewards > 0 && (
-                <span className="ml-auto bg-green-500 text-white text-xs rounded-full px-2 py-1">
-                  {stats.rewards}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === 'profile' 
-                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg' 
-                  : 'hover:bg-indigo-50 hover:text-indigo-700'
-              }`}
-              style={{ color: activeTab === 'profile' ? 'white' : safeTheme.colors.text }}
-            >
-              👤
-              <span className="font-medium">Profile</span>
-            </button>
-          </nav>
+          ))}
         </div>
 
-        {/* Logout Section - Fixed at Bottom */}
-        <div className="p-4 border-t" style={{ borderColor: safeTheme.colors.border }}>
+        {/* Logout */}
+        <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.875rem', borderRadius: '0.75rem', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#F87171', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s ease' }}
           >
-            🚪
-            <span className="font-medium">Logout</span>
+            <span>🚪</span>
+            <span>Logout</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
         {/* Header */}
-        <div className="border-b" style={{ backgroundColor: safeTheme.colors.surface, borderColor: safeTheme.colors.border }}>
-          <div className="px-8 py-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold" style={{ color: safeTheme.colors.text }}>
-                  Welcome back, {user?.name?.split(' ')[0] || 'User'}! ⭐
-                </h1>
-                <p style={{ color: safeTheme.colors.textSecondary }}>
-                  Ready to take on some challenges?
-                </p>
+        <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(11,15,20,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '1.25rem 2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="animate-stagger-fade">
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F1F5F9', margin: 0 }}>
+                Welcome back, <span className="gradient-text">{user?.name?.split(' ')[0] || 'User'}</span> ⚡
+              </h1>
+              <p style={{ color: '#475569', margin: '0.25rem 0 0', fontSize: '0.9rem' }}>Ready to take on some challenges?</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '999px' }}>
+                <span>⭐</span>
+                <span className="gradient-text" style={{ fontWeight: 800, fontSize: '0.95rem' }}>{stats.points.toLocaleString()} pts</span>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                  ⭐️
-                  <span className="font-bold" style={{ color: safeTheme.colors.text }}>
-                    {stats.points} pts
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                  🏆
-                  <span className="font-bold" style={{ color: safeTheme.colors.text }}>
-                    #{stats.rank}
-                  </span>
-                </div>
+              <div className="rank-badge-shimmer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.35)', borderRadius: '999px' }}>
+                <span>🏆</span>
+                <span className="gradient-text-gold" style={{ fontWeight: 800, fontSize: '0.95rem' }}>#{stats.rank}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-8">
+        <div style={{ padding: '2rem' }}>
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div>
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: safeTheme.colors.textSecondary }}>
-                        Total Challenges
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
-                        {stats.totalChallenges}
-                      </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+                {[
+                  { label: 'Total Challenges', value: stats.totalChallenges, icon: '🏆', color: '#7C3AED', glow: 'rgba(124,58,237,0.3)' },
+                  { label: 'Completed', value: stats.completedChallenges, icon: '⚡', color: '#10B981', glow: 'rgba(16,185,129,0.3)' },
+                  { label: 'Points', value: stats.points.toLocaleString(), icon: '⭐', color: '#06B6D4', glow: 'rgba(6,182,212,0.3)', isPoints: true },
+                  { label: 'Rank', value: `#${stats.rank}`, icon: '🎖️', color: '#FACC15', glow: 'rgba(250,204,21,0.3)' },
+                ].map(({ label, value, icon, color, glow, isPoints }) => (
+                  <div key={label} className="glass-card-hover" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', padding: '1.5rem', cursor: 'default' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div>
+                        <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.5rem' }}>{label}</p>
+                        <p style={{ color: '#F1F5F9', fontSize: isPoints ? '1.75rem' : '2rem', fontWeight: 800, margin: 0, lineHeight: 1 }}>{value}</p>
+                      </div>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', border: `1px solid ${color}33`, boxShadow: `0 0 16px ${glow}` }}>
+                        {icon}
+                      </div>
                     </div>
-                    <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                      🏆
-                    </div>
+                    {isPoints && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569', marginBottom: '0.4rem' }}>
+                          <span>Level progress</span>
+                          <span>{Math.round((stats.points % 1000) / 10)}%</span>
+                        </div>
+                        <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${(stats.points % 1000) / 10}%`, background: 'linear-gradient(90deg, #7C3AED, #06B6D4)', borderRadius: 999 }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: safeTheme.colors.textSecondary }}>
-                        Completed
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
-                        {stats.completedChallenges}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                      ⚡
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: safeTheme.colors.textSecondary }}>
-                        Points
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
-                        {stats.points}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                      ⭐️
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: safeTheme.colors.textSecondary }}>
-                        Rank
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
-                        #{stats.rank}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                      👥
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Recent Activity & Quick Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <h3 className="text-xl font-bold mb-4" style={{ color: safeTheme.colors.text }}>
-                    📊 Recent Activity
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                {/* Recent Activity — Timeline */}
+                <div style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', padding: '1.5rem' }}>
+                  <h3 style={{ color: '#F1F5F9', fontWeight: 700, fontSize: '1.05rem', margin: '0 0 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>📊</span>
+                    Recent Activity
                   </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3 p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">✓</div>
-                      <div className="flex-1">
-                        <p className="font-medium" style={{ color: safeTheme.colors.text }}>Completed Coffee Art Challenge</p>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>+180 points • 3 hours ago</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                    {[
+                      { icon: '✓', label: 'Completed Coffee Art Challenge', sub: '+180 points · 3 hours ago', dotColor: '#10B981', dotGlow: 'rgba(16,185,129,0.5)' },
+                      { icon: '🏆', label: 'Earned Challenge Master badge', sub: 'Achievement unlocked · 1 day ago', dotColor: '#FACC15', dotGlow: 'rgba(250,204,21,0.5)' },
+                      { icon: '👥', label: 'Connected with Sarah Johnson', sub: 'New friend · 2 days ago', dotColor: '#7C3AED', dotGlow: 'rgba(124,58,237,0.5)' },
+                      { icon: '🎁', label: 'Claimed Coffee Discount reward', sub: '-500 points · 3 days ago', dotColor: '#FACC15', dotGlow: 'rgba(250,204,21,0.4)' },
+                    ].map(({ icon, label, sub, dotColor, dotGlow }, i, arr) => (
+                      <div key={i} className="timeline-item" style={{ marginBottom: i < arr.length - 1 ? '1.25rem' : 0 }}>
+                        <div className="timeline-dot" style={{ background: `radial-gradient(circle, ${dotGlow} 0%, ${dotColor}44 100%)`, border: `1px solid ${dotColor}88`, boxShadow: `0 0 12px ${dotGlow}`, color: dotColor, fontSize: '0.65rem', fontWeight: 800 }}>{icon}</div>
+                        <div style={{ paddingBottom: '0.25rem' }}>
+                          <p style={{ color: '#F1F5F9', fontWeight: 600, fontSize: '0.9rem', margin: '0 0 0.2rem' }}>{label}</p>
+                          <p style={{ color: '#475569', fontSize: '0.78rem', margin: 0 }}>{sub}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">🏆</div>
-                      <div className="flex-1">
-                        <p className="font-medium" style={{ color: safeTheme.colors.text }}>Earned Challenge Master badge</p>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Achievement unlocked • 1 day ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">👥</div>
-                      <div className="flex-1">
-                        <p className="font-medium" style={{ color: safeTheme.colors.text }}>Connected with Sarah Johnson</p>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>New friend • 2 days ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background }}>
-                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm">🎁</div>
-                      <div className="flex-1">
-                        <p className="font-medium" style={{ color: safeTheme.colors.text }}>Claimed Coffee Discount reward</p>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>-500 points • 3 days ago</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                  <h3 className="text-xl font-bold mb-4" style={{ color: safeTheme.colors.text }}>
-                    🎯 Quick Actions
+                {/* Quick Actions */}
+                <div style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', padding: '1.5rem' }}>
+                  <h3 style={{ color: '#F1F5F9', fontWeight: 700, fontSize: '1.05rem', margin: '0 0 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>🎯</span>
+                    Quick Actions
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      onClick={() => setActiveTab('challenges')}
-                      className="h-20 bg-emerald-600 hover:bg-emerald-700 text-white flex flex-col items-center justify-center"
-                    >
-                      🎯
-                      <span className="text-sm">Browse Challenges</span>
-                    </Button>
-                    <Button
-                      onClick={() => setActiveTab('friends')}
-                      className="h-20 bg-blue-600 hover:bg-blue-700 text-white flex flex-col items-center justify-center"
-                    >
-                      👥
-                      <span className="text-sm">Find Friends</span>
-                    </Button>
-                    <Button
-                      onClick={() => setActiveTab('leaderboard')}
-                      className="h-20 bg-purple-600 hover:bg-purple-700 text-white flex flex-col items-center justify-center"
-                    >
-                      🏆
-                      <span className="text-sm">View Rankings</span>
-                    </Button>
-                    <Button
-                      onClick={() => setActiveTab('rewards')}
-                      className="h-20 bg-orange-600 hover:bg-orange-700 text-white flex flex-col items-center justify-center"
-                    >
-                      🎁
-                      <span className="text-sm">Claim Rewards</span>
-                    </Button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                    {[
+                      { icon: '🎯', label: 'Browse Challenges', tab: 'challenges', accent: '#7C3AED' },
+                      { icon: '👥', label: 'Find Friends', tab: 'friends', accent: '#06B6D4' },
+                      { icon: '🏆', label: 'View Rankings', tab: 'leaderboard', accent: '#FACC15' },
+                      { icon: '🎁', label: 'Claim Rewards', tab: 'rewards', accent: '#10B981' },
+                    ].map(({ icon, label, tab, accent }) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className="gradient-btn"
+                        style={{ height: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: 'none', cursor: 'pointer' }}
+                      >
+                        <span style={{ position: 'relative', zIndex: 1, fontSize: '1.4rem', lineHeight: 1 }}>{icon}</span>
+                        <span style={{ position: 'relative', zIndex: 1, fontSize: '0.8rem', fontWeight: 700, color: 'white' }}>{label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Featured Challenges */}
               {userChallenges.length > 0 && (
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
-                      🌟 Featured Challenges
-                    </h2>
-                    <Button
-                      onClick={() => setActiveTab('challenges')}
-                      variant="outline"
-                      size="sm"
-                    >
-                      View All
-                    </Button>
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <h2 style={{ color: '#F1F5F9', fontWeight: 800, fontSize: '1.3rem', margin: 0 }}>🌟 Featured Challenges</h2>
+                    <button onClick={() => setActiveTab('challenges')} style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.35)', color: '#A78BFA', borderRadius: '0.5rem', padding: '0.4rem 1rem', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 600, fontSize: '0.85rem' }}>View All</button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {userChallenges.slice(0, 3).map((challenge) => (
-                      <div key={challenge.id} className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow" 
-                           style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-2xl">
-                              {challenge.category === 'Social Media' ? '📱' :
-                               challenge.category === 'Photography' ? '📸' :
-                               challenge.category === 'creativity' ? '🎨' :
-                               challenge.category === 'Fitness' ? '💪' : '🏆'}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              challenge.difficulty === 'easy' ? 'text-green-600 bg-green-100' :
-                              challenge.difficulty === 'medium' ? 'text-yellow-600 bg-yellow-100' :
-                              'text-red-600 bg-red-100'
-                            }`}>
-                              {challenge.difficulty}
-                            </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+                    {userChallenges.slice(0, 3).map((challenge) => {
+                      const diffColor = challenge.difficulty === 'easy' ? '#10B981' : challenge.difficulty === 'medium' ? '#FACC15' : '#EF4444';
+                      const diffGlow = challenge.difficulty === 'easy' ? 'rgba(16,185,129,0.4)' : challenge.difficulty === 'medium' ? 'rgba(250,204,21,0.4)' : 'rgba(239,68,68,0.4)';
+                      return (
+                        <div key={challenge.id} className="glass-card-hover" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', padding: '1.4rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '1.5rem' }}>{challenge.category === 'Social Media' ? '📱' : challenge.category === 'Photography' ? '📸' : challenge.category === 'creativity' ? '🎨' : challenge.category === 'Fitness' ? '💪' : '🏆'}</span>
+                              <span style={{ padding: '2px 10px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, color: diffColor, background: diffColor + '22', border: '1px solid ' + diffColor + '55', boxShadow: '0 0 8px ' + diffGlow }}>{challenge.difficulty}</span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <p className="gradient-text-gold" style={{ fontWeight: 800, fontSize: '1.2rem', margin: 0 }}>{challenge.points}</p>
+                              <p style={{ color: '#475569', fontSize: '0.7rem', margin: 0 }}>points</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-emerald-600 font-bold text-lg">{challenge.points}</p>
-                            <p className="text-xs" style={{ color: safeTheme.colors.textSecondary }}>points</p>
+                          <h3 style={{ color: '#F1F5F9', fontWeight: 700, fontSize: '1rem', margin: '0 0 0.4rem' }}>{challenge.title}</h3>
+                          <p style={{ color: '#64748B', fontSize: '0.82rem', margin: '0 0 0.875rem', lineHeight: 1.5 }}>{challenge.description}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                            <span style={{ color: '#475569', fontSize: '0.78rem' }}>👥 {challenge.participants || 0}</span>
+                            <span style={{ color: challenge.userStatus === 'completed' ? '#10B981' : '#94A3B8', fontSize: '0.78rem', fontWeight: 600 }}>{challenge.userStatus === 'completed' ? '✅ Completed' : challenge.userStatus === 'in_progress' ? '🔄 In Progress' : '⭐ Available'}</span>
                           </div>
+                          {(challenge.userStatus === 'available' || challenge.userStatus === 'not_joined') ? (
+                            <button onClick={() => handleJoinChallenge(challenge.id.toString())} className="gradient-btn" style={{ width: '100%', padding: '0.6rem', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem', borderRadius: '0.75rem' }}><span style={{ position: 'relative', zIndex: 1 }}>🚀 Start Challenge</span></button>
+                          ) : challenge.userStatus === 'in_progress' ? (
+                            <button onClick={() => navigate('/dashboard')} style={{ width: '100%', padding: '0.6rem', background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.4)', color: '#06B6D4', borderRadius: '0.75rem', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem' }}>▶ Continue</button>
+                          ) : (
+                            <button disabled style={{ width: '100%', padding: '0.6rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981', borderRadius: '0.75rem', cursor: 'not-allowed', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem' }}>✅ Completed ({challenge.userPointsEarned} pts)</button>
+                          )}
                         </div>
-                        
-                        <h3 className="text-lg font-semibold mb-2" style={{ color: safeTheme.colors.text }}>
-                          {challenge.title}
-                        </h3>
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: safeTheme.colors.textSecondary }}>
-                          {challenge.description}
-                        </p>
-                        
-                        <div className="flex items-center justify-between text-sm mb-4">
-                          <div className="flex items-center space-x-1" style={{ color: safeTheme.colors.textSecondary }}>
-                            👥
-                            <span>{challenge.participants || 0}</span>
-                          </div>
-                          <div className="flex items-center space-x-1" style={{ color: safeTheme.colors.textSecondary }}>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              challenge.userStatus === 'completed' ? 'bg-green-100 text-green-800' :
-                              challenge.userStatus === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                              challenge.userStatus === 'not_joined' ? 'bg-gray-100 text-gray-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {challenge.userStatus === 'completed' ? '✅ Completed' :
-                               challenge.userStatus === 'in_progress' ? '🔄 In Progress' :
-                               challenge.userStatus === 'not_joined' ? '⭐ Available' :
-                               '⭐ Available'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {challenge.userStatus === 'not_joined' || challenge.userStatus === 'available' ? (
-                          <Button 
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                            onClick={() => handleJoinChallenge(challenge.id.toString())}
-                          >
-                            🏆
-                            Join Challenge
-                          </Button>
-                        ) : challenge.userStatus === 'in_progress' ? (
-                          <Button 
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => navigate('/dashboard')}
-                          >
-                            ▶️
-                            Continue Challenge
-                          </Button>
-                        ) : (
-                          <Button 
-                            className="w-full bg-green-600 hover:bg-green-700 text-white"
-                            disabled
-                          >
-                            🏆
-                            Completed ({challenge.userPointsEarned} pts)
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1226,26 +1034,20 @@ const Dashboard: React.FC = () => {
               {userChallenges.length > 0 && (
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                    <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                       🌐 Available Challenges
                     </h2>
                     <div className="flex items-center space-x-4">
-                      <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                      <div className="text-sm" style={{ color: '#64748B' }}>
                         {userChallenges.length} challenges available
                       </div>
-                      <Button
-                        onClick={refreshChallenges}
-                        variant="outline"
-                        size="sm"
-                      >
-                        🔄 Refresh
-                      </Button>
+                      <button onClick={refreshChallenges} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', color:'#94A3B8', borderRadius:'0.5rem', padding:'0.4rem 0.875rem', cursor:'pointer', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.85rem' }}>🔄 Refresh</button>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {userChallenges.map((challenge) => (
                       <div key={challenge.id} className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow" 
-                           style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+                           style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-2xl">
@@ -1254,33 +1056,27 @@ const Dashboard: React.FC = () => {
                                challenge.category === 'creativity' ? '🎨' :
                                challenge.category === 'Fitness' ? '💪' : '🏆'}
                             </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              challenge.difficulty === 'easy' ? 'text-green-600 bg-green-100' :
-                              challenge.difficulty === 'medium' ? 'text-yellow-600 bg-yellow-100' :
-                              'text-red-600 bg-red-100'
-                            }`}>
-                              {challenge.difficulty}
-                            </span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 10px', borderRadius: 999, color: challenge.difficulty === 'easy' ? '#10B981' : challenge.difficulty === 'medium' ? '#FACC15' : '#EF4444', background: challenge.difficulty === 'easy' ? '#10B98122' : challenge.difficulty === 'medium' ? '#FACC1522' : '#EF444422', border: '1px solid', borderColor: challenge.difficulty === 'easy' ? '#10B98155' : challenge.difficulty === 'medium' ? '#FACC1555' : '#EF444455', boxShadow: challenge.difficulty === 'easy' ? '0 0 8px rgba(16,185,129,0.4)' : challenge.difficulty === 'medium' ? '0 0 8px rgba(250,204,21,0.4)' : '0 0 8px rgba(239,68,68,0.4)' }}>{challenge.difficulty}</span>
                           </div>
                           <div className="text-right">
-                            <p className="text-emerald-600 font-bold text-lg">{challenge.points}</p>
-                            <p className="text-xs" style={{ color: safeTheme.colors.textSecondary }}>points</p>
+                            <p className="gradient-text-gold" style={{ fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>{challenge.points}</p>
+                            <p className="text-xs" style={{ color: '#64748B' }}>points</p>
                           </div>
                         </div>
                         
-                        <h3 className="text-lg font-semibold mb-2" style={{ color: safeTheme.colors.text }}>
+                        <h3 className="text-lg font-semibold mb-2" style={{ color: '#F1F5F9' }}>
                           {challenge.title}
                         </h3>
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: safeTheme.colors.textSecondary }}>
+                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#64748B' }}>
                           {challenge.description}
                         </p>
                         
                         <div className="flex items-center justify-between text-sm mb-4">
-                          <div className="flex items-center space-x-1" style={{ color: safeTheme.colors.textSecondary }}>
+                          <div className="flex items-center space-x-1" style={{ color: '#64748B' }}>
                             👥
                             <span>{challenge.participants || 0}</span>
                           </div>
-                          <div className="flex items-center space-x-1" style={{ color: safeTheme.colors.textSecondary }}>
+                          <div className="flex items-center space-x-1" style={{ color: '#64748B' }}>
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               challenge.userStatus === 'completed' ? 'bg-green-100 text-green-800' :
                               challenge.userStatus === 'in_progress' ? 'bg-blue-100 text-blue-800' :
@@ -1296,29 +1092,11 @@ const Dashboard: React.FC = () => {
                         </div>
                         
                         {challenge.userStatus === 'not_joined' ? (
-                          <Button 
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                            onClick={() => handleJoinChallenge(challenge.id.toString())}
-                          >
-                            🏆
-                            Join Challenge
-                          </Button>
+                          <button onClick={() => handleJoinChallenge(challenge.id.toString())} className="gradient-btn" style={{ width: '100%', padding: '0.6rem', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem', borderRadius: '0.75rem' }}><span style={{ position: 'relative', zIndex: 1 }}>🚀 Join Challenge</span></button>
                         ) : challenge.userStatus === 'in_progress' ? (
-                          <Button 
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => navigate('/dashboard')}
-                          >
-                            ▶️
-                            Continue Challenge
-                          </Button>
+                          <button onClick={() => navigate('/dashboard')} style={{ width: '100%', padding: '0.6rem', background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.35)', color: '#06B6D4', borderRadius: '0.75rem', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem' }}>▶ Continue</button>
                         ) : (
-                          <Button 
-                            className="w-full bg-green-600 hover:bg-green-700 text-white"
-                            disabled
-                          >
-                            🏆
-                            Completed ({challenge.userPointsEarned} pts)
-                          </Button>
+                          <button disabled style={{ width: '100%', padding: '0.6rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981', borderRadius: '0.75rem', cursor: 'not-allowed', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: '0.88rem' }}>✅ Completed ({challenge.userPointsEarned} pts)</button>
                         )}
                       </div>
                     ))}
@@ -1332,13 +1110,13 @@ const Dashboard: React.FC = () => {
           {activeTab === 'profile' && (
             <div>
               {/* User Profile Section */}
-              <div className="rounded-xl p-6 shadow-lg mb-8" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+              <div className="rounded-xl p-6 shadow-lg mb-8" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                    <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                       User Profile
                     </h2>
-                    <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    <p className="text-sm" style={{ color: '#64748B' }}>
                       Manage your account settings and preferences
                     </p>
                   </div>
@@ -1349,74 +1127,62 @@ const Dashboard: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: safeTheme.colors.text }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#F1F5F9' }}>
                       Name
                     </label>
-                    <div className="p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                      <span style={{ color: safeTheme.colors.text }}>{user?.name || 'Demo User'}</span>
+                    <div className="p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span style={{ color: '#F1F5F9' }}>{user?.name || 'Demo User'}</span>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: safeTheme.colors.text }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#F1F5F9' }}>
                       Email
                     </label>
-                    <div className="p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                      <span style={{ color: safeTheme.colors.text }}>{user?.email || 'demo@user.com'}</span>
+                    <div className="p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span style={{ color: '#F1F5F9' }}>{user?.email || 'demo@user.com'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center p-4 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                    <div className="text-2xl font-bold text-blue-600">{stats.totalChallenges}</div>
-                    <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Total Challenges</div>
+                  <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="gradient-text" style={{ fontSize: "1.5rem", fontWeight: 800 }}>{stats.totalChallenges}</div>
+                    <div className="text-sm" style={{ color: '#64748B' }}>Total Challenges</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                    <div className="text-2xl font-bold text-green-600">{stats.completedChallenges}</div>
-                    <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Completed</div>
+                  <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#10B981" }}>{stats.completedChallenges}</div>
+                    <div className="text-sm" style={{ color: '#64748B' }}>Completed</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                    <div className="text-2xl font-bold text-purple-600">{stats.points}</div>
-                    <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Points</div>
+                  <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#A78BFA" }}>{stats.points}</div>
+                    <div className="text-sm" style={{ color: '#64748B' }}>Points</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
-                    <div className="text-2xl font-bold text-orange-600">#{stats.rank}</div>
-                    <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Rank</div>
+                  <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#FACC15" }}>#{stats.rank}</div>
+                    <div className="text-sm" style={{ color: '#64748B' }}>Rank</div>
                   </div>
                 </div>
 
-                <div className="flex space-x-4">
-                  <Button
-                    onClick={() => alert('Profile editing coming soon!')}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    👨‍👩‍👧‍👦
-                    Edit Profile
-                  </Button>
-                  <Button
-                    onClick={() => alert('Settings coming soon!')}
-                    variant="outline"
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    ⚙️ Settings
-                  </Button>
+                <div style={{ display:'flex', gap:'0.75rem' }}>
+                  <button onClick={() => alert('Profile editing coming soon!')} className="gradient-btn" style={{ padding:'0.5rem 1.25rem' }}><span style={{ position:'relative', zIndex:1 }}>👤 Edit Profile</span></button>
+                  <button onClick={() => alert('Settings coming soon!')} style={{ padding:'0.5rem 1.25rem', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', color:'#94A3B8', borderRadius:'0.75rem', cursor:'pointer', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.9rem' }}>⚙️ Settings</button>
                 </div>
               </div>
 
               {/* Achievements Section */}
-              <div className="rounded-xl p-6 shadow-lg" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
-                <h3 className="text-xl font-bold mb-4" style={{ color: safeTheme.colors.text }}>
+              <div className="rounded-xl p-6 shadow-lg" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h3 className="text-xl font-bold mb-4" style={{ color: '#F1F5F9' }}>
                   🏆 Achievements
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(user?.achievements || ['Early Adopter', 'Video Creator', 'Community Helper', 'Challenge Master']).map((achievement, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg" style={{ backgroundColor: safeTheme.colors.background, border: `1px solid ${safeTheme.colors.border}` }}>
+                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
                         🏆
                       </div>
                       <div>
-                        <div className="font-medium" style={{ color: safeTheme.colors.text }}>{achievement}</div>
-                        <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>Unlocked</div>
+                        <div className="font-medium" style={{ color: '#F1F5F9' }}>{achievement}</div>
+                        <div className="text-sm" style={{ color: '#64748B' }}>Unlocked</div>
                       </div>
                     </div>
                   ))}
@@ -1429,16 +1195,10 @@ const Dashboard: React.FC = () => {
           {activeTab === 'notifications' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                   🔔 Notifications
                 </h2>
-                <Button
-                  onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
-                  variant="outline"
-                  size="sm"
-                >
-                  Mark All as Read
-                </Button>
+                <button onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))} style={{ background:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.35)', color:'#A78BFA', borderRadius:'0.5rem', padding:'0.4rem 0.875rem', cursor:'pointer', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.85rem' }}>✓ Mark All Read</button>
               </div>
 
               <div className="space-y-4">
@@ -1446,23 +1206,23 @@ const Dashboard: React.FC = () => {
                   <div
                     key={notification.id}
                     className={`rounded-xl p-4 shadow-lg cursor-pointer transition-all ${
-                      !notification.read ? 'border-l-4 border-l-emerald-500' : ''
+                      !notification.read ? 'border-l-4 border-l-violet-500' : ''
                     }`}
-                    style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}
+                    style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}
                     onClick={() => markNotificationAsRead(notification.id)}
                   >
                     <div className="flex items-start space-x-4">
                       <div className="text-2xl">{notification.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold" style={{ color: safeTheme.colors.text }}>
+                          <h3 className="font-semibold" style={{ color: '#F1F5F9' }}>
                             {notification.title}
                           </h3>
-                          <span className="text-xs" style={{ color: safeTheme.colors.textSecondary }}>
+                          <span className="text-xs" style={{ color: '#64748B' }}>
                             {notification.timestamp}
                           </span>
                         </div>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                        <p className="text-sm" style={{ color: '#64748B' }}>
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between mt-2">
@@ -1475,7 +1235,7 @@ const Dashboard: React.FC = () => {
                             {notification.type}
                           </span>
                           {!notification.read && (
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#06B6D4)", boxShadow: "0 0 6px rgba(124,58,237,0.7)" }}></div>
                           )}
                         </div>
                       </div>
@@ -1490,16 +1250,10 @@ const Dashboard: React.FC = () => {
           {activeTab === 'friends' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                   👥 Friends ({friends.length})
                 </h2>
-                <Button
-                  onClick={() => findFriends()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  👥
-                  Find Friends
-                </Button>
+                <button onClick={() => findFriends()} className="gradient-btn" style={{ padding:'0.5rem 1.25rem' }}><span style={{ position:'relative', zIndex:1 }}>👥 Find Friends</span></button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1507,7 +1261,7 @@ const Dashboard: React.FC = () => {
                   <div
                     key={friend.id}
                     className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
-                    style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}
+                    style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <div className="flex items-center space-x-4 mb-4">
                       <div className="relative">
@@ -1519,10 +1273,10 @@ const Dashboard: React.FC = () => {
                         }`}></div>
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold" style={{ color: safeTheme.colors.text }}>
+                        <h3 className="font-semibold" style={{ color: '#F1F5F9' }}>
                           {friend.name}
                         </h3>
-                        <p className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                        <p className="text-sm" style={{ color: '#64748B' }}>
                           Level {friend.level} • {friend.points} pts
                         </p>
                       </div>
@@ -1530,33 +1284,20 @@ const Dashboard: React.FC = () => {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
-                        <span style={{ color: safeTheme.colors.textSecondary }}>Status:</span>
+                        <span style={{ color: '#64748B' }}>Status:</span>
                         <span className={`font-medium ${friend.status === 'online' ? 'text-green-600' : 'text-gray-600'}`}>
                           {friend.status === 'online' ? '🟢 Online' : '⚫ Offline'}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span style={{ color: safeTheme.colors.textSecondary }}>Mutual Friends:</span>
-                        <span style={{ color: safeTheme.colors.text }}>{friend.mutualFriends}</span>
+                        <span style={{ color: '#64748B' }}>Mutual Friends:</span>
+                        <span style={{ color: '#F1F5F9' }}>{friend.mutualFriends}</span>
                       </div>
                     </div>
 
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => startChat(friend.name)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        size="sm"
-                      >
-                        💬
-                        Chat
-                      </Button>
-                      <Button
-                        onClick={() => alert(`Viewing ${friend.name}'s profile...`)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        👨‍👩‍👧‍👦
-                      </Button>
+                    <div style={{ display:'flex', gap:'0.5rem' }}>
+                      <button onClick={() => startChat(friend.name)} className="gradient-btn" style={{ flex:1, padding:'0.5rem', fontSize:'0.85rem', border:'none', cursor:'pointer', borderRadius:'0.75rem' }}><span style={{ position:'relative', zIndex:1 }}>💬 Chat</span></button>
+                      <button onClick={() => alert(`Viewing ${friend.name}'s profile...`)} style={{ padding:'0.5rem 0.75rem', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', color:'#94A3B8', borderRadius:'0.75rem', cursor:'pointer', fontSize:'1rem' }}>👤</button>
                     </div>
                   </div>
                 ))}
@@ -1568,18 +1309,18 @@ const Dashboard: React.FC = () => {
           {activeTab === 'leaderboard' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                   📊 Interactive Leaderboard
                 </h2>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">Weekly</Button>
-                  <Button variant="outline" size="sm">Monthly</Button>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" size="sm">All Time</Button>
+                  <button style={{ padding:'0.35rem 0.875rem', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#64748B', borderRadius:'0.5rem', cursor:'pointer', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.82rem' }}>Weekly</button>
+                  <button style={{ padding:'0.35rem 0.875rem', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#64748B', borderRadius:'0.5rem', cursor:'pointer', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.82rem' }}>Monthly</button>
+                  <button className="gradient-btn" style={{ padding:'0.35rem 0.875rem' }}><span style={{ position:'relative', zIndex:1 }}>All Time</span></button>
                 </div>
               </div>
 
               {/* Current User Position - Enhanced */}
-              <div className="rounded-xl p-6 mb-6 border-2 border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" style={{ backgroundColor: safeTheme.colors.surface }}>
+              <div className="rounded-xl p-6 mb-6 border-2 border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-teal-500/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="relative">
@@ -1591,7 +1332,7 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold" style={{ color: safeTheme.colors.text }}>
+                      <h3 className="text-xl font-bold" style={{ color: '#F1F5F9' }}>
                         {user?.name} (You)
                       </h3>
                       <div className="flex items-center space-x-4 text-sm">
@@ -1612,7 +1353,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">#{stats.rank}</div>
-                    <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                    <div className="text-sm" style={{ color: '#64748B' }}>
                       {stats.points.toLocaleString()} points
                     </div>
                     <div className="text-xs text-emerald-500 font-medium">
@@ -1623,11 +1364,11 @@ const Dashboard: React.FC = () => {
                 
                 {/* Progress Bar for Current User */}
                 <div className="mt-4">
-                  <div className="flex items-center justify-between text-sm mb-2" style={{ color: safeTheme.colors.textSecondary }}>
+                  <div className="flex items-center justify-between text-sm mb-2" style={{ color: '#64748B' }}>
                     <span>Progress to next rank</span>
                     <span>75%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div style={{ background: "rgba(255,255,255,0.07)", borderRadius: 999, overflow: "hidden", height: 12, width: "100%" }}>
                     <div 
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-1000 ease-out"
                       style={{ width: '75%', boxShadow: '0 0 10px #10b981' }}
@@ -1649,12 +1390,12 @@ const Dashboard: React.FC = () => {
                       className={`rounded-xl p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] ${
                         entry.rank <= 3 ? 'border-2' : 'border'
                       } ${
-                        entry.rank === 1 ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-yellow-100' :
-                        entry.rank === 2 ? 'border-gray-400 bg-gradient-to-r from-gray-50 to-gray-100' :
-                        entry.rank === 3 ? 'border-orange-400 bg-gradient-to-r from-orange-50 to-orange-100' :
+                        entry.rank === 1 ? 'border-yellow-400 ' :
+                        entry.rank === 2 ? 'border-gray-400 ' :
+                        entry.rank === 3 ? 'border-orange-400 ' :
                         ''
                       }`}
-                      style={{ backgroundColor: entry.rank > 3 ? safeTheme.colors.surface : undefined, border: entry.rank > 3 ? `1px solid ${safeTheme.colors.border}` : undefined }}
+                      style={{ background: entry.rank > 3 ? 'rgba(255,255,255,0.04)' : undefined, border: entry.rank > 3 ? '1px solid rgba(255,255,255,0.08)' : undefined, backdropFilter: 'blur(20px)' }}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-4">
@@ -1695,7 +1436,7 @@ const Dashboard: React.FC = () => {
                           {/* Enhanced User Info */}
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-xl font-bold" style={{ color: safeTheme.colors.text }}>
+                              <h3 className="text-xl font-bold" style={{ color: '#F1F5F9' }}>
                                 {entry.name}
                               </h3>
                               {entry.rank <= 3 && (
@@ -1732,7 +1473,7 @@ const Dashboard: React.FC = () => {
                           <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-1">
                             {entry.points.toLocaleString()}
                           </div>
-                          <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                          <div className="text-sm" style={{ color: '#64748B' }}>
                             points
                           </div>
                           <div className="text-xs text-emerald-500 font-medium">
@@ -1743,11 +1484,11 @@ const Dashboard: React.FC = () => {
                       
                       {/* Progress Bar Visualization */}
                       <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-2" style={{ color: safeTheme.colors.textSecondary }}>
+                        <div className="flex items-center justify-between text-sm mb-2" style={{ color: '#64748B' }}>
                           <span>Progress to #1</span>
                           <span>{progressPercentage.toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div style={{ background: "rgba(255,255,255,0.07)", borderRadius: 999, overflow: "hidden", height: 12, width: "100%" }}>
                           <div 
                             className={`h-full rounded-full transition-all duration-1000 ease-out ${
                               entry.rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' :
@@ -1797,34 +1538,34 @@ const Dashboard: React.FC = () => {
 
               {/* Performance Stats Summary */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+                <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="text-2xl mb-2">🏆</div>
                   <div className="text-2xl font-bold text-yellow-500">{leaderboard[0]?.points.toLocaleString() || '0'}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                  <div className="text-sm" style={{ color: '#64748B' }}>
                     Highest Score
                   </div>
                 </div>
                 
-                <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+                <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="text-2xl mb-2">📈</div>
                   <div className="text-2xl font-bold text-emerald-500">{Math.round(leaderboard.reduce((acc, entry) => acc + (entry.level * 0.8), 0) / leaderboard.length) || 0}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                  <div className="text-sm" style={{ color: '#64748B' }}>
                     Avg. Completed
                   </div>
                 </div>
                 
-                <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+                <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="text-2xl mb-2">⚡</div>
-                  <div className="text-2xl font-bold text-purple-600">{Math.round(leaderboard.reduce((acc, entry) => acc + entry.level, 0) / leaderboard.length) || 0}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#A78BFA" }}>{Math.round(leaderboard.reduce((acc, entry) => acc + entry.level, 0) / leaderboard.length) || 0}</div>
+                  <div className="text-sm" style={{ color: '#64748B' }}>
                     Avg. Level
                   </div>
                 </div>
 
-                <div className="rounded-xl p-4 text-center" style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}>
+                <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="text-2xl mb-2">👥</div>
-                  <div className="text-2xl font-bold text-orange-600">{leaderboard.length}</div>
-                  <div className="text-sm" style={{ color: safeTheme.colors.textSecondary }}>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#FACC15" }}>{leaderboard.length}</div>
+                  <div className="text-sm" style={{ color: '#64748B' }}>
                     Active Players
                   </div>
                 </div>
@@ -1836,12 +1577,12 @@ const Dashboard: React.FC = () => {
           {activeTab === 'rewards' && (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: safeTheme.colors.text }}>
+                <h2 className="text-2xl font-bold" style={{ color: '#F1F5F9' }}>
                   🎁 Rewards Store
                 </h2>
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg" style={{ backgroundColor: safeTheme.colors.surface }}>
+                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)' }}>
                   ⭐️
-                  <span className="font-bold" style={{ color: safeTheme.colors.text }}>
+                  <span className="font-bold" style={{ color: '#F1F5F9' }}>
                     {stats.points} points available
                   </span>
                 </div>
@@ -1856,7 +1597,7 @@ const Dashboard: React.FC = () => {
                     } ${
                       !reward.available ? 'opacity-40' : ''
                     }`}
-                    style={{ backgroundColor: safeTheme.colors.surface, border: `1px solid ${safeTheme.colors.border}` }}
+                    style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="text-3xl">{reward.icon}</div>
@@ -1875,10 +1616,10 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <h3 className="text-lg font-semibold mb-2" style={{ color: safeTheme.colors.text }}>
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: '#F1F5F9' }}>
                       {reward.title}
                     </h3>
-                    <p className="text-sm mb-4" style={{ color: safeTheme.colors.textSecondary }}>
+                    <p className="text-sm mb-4" style={{ color: '#64748B' }}>
                       {reward.description}
                     </p>
 
@@ -1898,25 +1639,11 @@ const Dashboard: React.FC = () => {
                       </span>
                       
                       {reward.claimed ? (
-                        <Button disabled size="sm" className="bg-gray-400 text-white">
-                          🎁
-                          Claimed
-                        </Button>
+                        <button disabled style={{ padding:'0.5rem 1.25rem', background:'rgba(100,116,139,0.15)', border:'1px solid rgba(100,116,139,0.25)', color:'#475569', borderRadius:'0.75rem', cursor:'not-allowed', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.85rem' }}>🎁 Claimed</button>
                       ) : reward.available ? (
-                        <Button
-                          onClick={() => claimReward(reward.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                          size="sm"
-                          disabled={stats.points < reward.points}
-                        >
-                          🎁
-                          {stats.points >= reward.points ? 'Claim' : 'Not Enough Points'}
-                        </Button>
+                        <button onClick={() => claimReward(reward.id)} disabled={stats.points < reward.points} className={stats.points >= reward.points ? 'gradient-btn' : ''} style={stats.points < reward.points ? { padding:'0.5rem 1.25rem', background:'rgba(100,116,139,0.1)', border:'1px solid rgba(100,116,139,0.2)', color:'#475569', borderRadius:'0.75rem', cursor:'not-allowed', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.85rem' } : { padding:'0.5rem 1.25rem', border:'none', cursor:'pointer', borderRadius:'0.75rem' }}><span style={{ position:'relative', zIndex:1 }}>🎁 {stats.points >= reward.points ? 'Claim' : 'Not Enough Points'}</span></button>
                       ) : (
-                        <Button disabled size="sm" className="bg-gray-400 text-white">
-                          🏆
-                          Locked
-                        </Button>
+                        <button disabled style={{ padding:'0.5rem 1.25rem', background:'rgba(100,116,139,0.1)', border:'1px solid rgba(100,116,139,0.2)', color:'#475569', borderRadius:'0.75rem', cursor:'not-allowed', fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:'0.85rem' }}>🏆 Locked</button>
                       )}
                     </div>
                   </div>
@@ -1926,6 +1653,54 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* ── Toast Notifications ──────────────────────────────────────────── */}
+      <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.5rem', pointerEvents: 'none' }}>
+        {toasts.map(toast => (
+          <div key={toast.id} style={{
+            pointerEvents: 'auto',
+            padding: '0.85rem 1.25rem',
+            borderRadius: '0.875rem',
+            backdropFilter: 'blur(20px)',
+            background: toast.type === 'success' ? 'rgba(16,185,129,0.2)' : toast.type === 'error' ? 'rgba(239,68,68,0.2)' : 'rgba(124,58,237,0.2)',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(16,185,129,0.4)' : toast.type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(124,58,237,0.4)'}`,
+            color: toast.type === 'success' ? '#10B981' : toast.type === 'error' ? '#F87171' : '#A78BFA',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            fontFamily: "'Outfit', sans-serif",
+            boxShadow: `0 8px 32px ${toast.type === 'success' ? 'rgba(16,185,129,0.25)' : toast.type === 'error' ? 'rgba(239,68,68,0.25)' : 'rgba(124,58,237,0.25)'}`,
+            animation: 'fadeSlideUp 0.3s ease',
+            maxWidth: 320,
+            minWidth: 220,
+          }}>
+            {toast.msg}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Chat Modal ────────────────────────────────────────────────────── */}
+      {chatModal.open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setChatModal({ open: false, friendName: '', msg: '' })}>
+          <div style={{ background: 'rgba(15,20,30,0.95)', border: '1px solid rgba(124,58,237,0.4)', borderRadius: '1.25rem', padding: '2rem', width: 380, boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: '#F1F5F9', fontWeight: 800, fontSize: '1.2rem', margin: '0 0 0.5rem' }}>💬 Chat with {chatModal.friendName}</h3>
+            <p style={{ color: '#475569', fontSize: '0.85rem', margin: '0 0 1.25rem' }}>Send a quick message</p>
+            <textarea
+              autoFocus
+              value={chatModal.msg}
+              onChange={e => setChatModal(prev => ({ ...prev, msg: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
+              placeholder={`Message ${chatModal.friendName}...`}
+              style={{ width: '100%', minHeight: 100, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '0.75rem', padding: '0.75rem', color: '#F1F5F9', resize: 'none', fontFamily: "'Outfit', sans-serif", fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', marginBottom: '1rem' }}
+            />
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={() => setChatModal({ open: false, friendName: '', msg: '' })} style={{ flex: 1, padding: '0.65rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#94A3B8', borderRadius: '0.75rem', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Cancel</button>
+              <button onClick={sendChatMessage} className="gradient-btn" style={{ flex: 1, padding: '0.65rem', border: 'none', cursor: 'pointer', borderRadius: '0.75rem' }}><span style={{ position: 'relative', zIndex: 1, fontWeight: 700 }}>Send ✉️</span></button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

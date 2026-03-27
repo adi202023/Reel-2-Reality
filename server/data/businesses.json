@@ -9,5 +9,16 @@
     "phone": "+1234567890",
     "createdAt": "2026-03-01T08:38:27.710Z",
     "isVerified": true
+  },
+  "a4d97259-e90c-425b-8635-f0bbb8376fb7": {
+    "id": "a4d97259-e90c-425b-8635-f0bbb8376fb7",
+    "email": "what@gmail.com",
+    "password": "$2a$10$qj8vbusaBfUhoVZbM/jn6OfBzPJS8EG9.iz7g/XZ5z9.RgXvYgPyK",
+    "businessName": "gg",
+    "businessType": "cafe",
+    "address": "dsu",
+    "phone": "1122334455",
+    "createdAt": "2026-03-27T04:48:57.073Z",
+    "isVerified": false
   }
 }
